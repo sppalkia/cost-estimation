@@ -1,0 +1,73 @@
+# Implements dummy expression objects to test cost model logic on.
+
+class Expr:
+    # Root expression class
+    newId = 0
+    @property
+    def id(self):
+        if self._id == None:
+            self._id = Expr.newId
+            Expr.newId += 1
+        return self._id
+
+    def children(self):
+        return []
+
+# Literals have no cost.
+class Literal(Expr):
+    def cost(self, ctx):
+        return 0
+
+class BinaryExpr(Expr):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def children(self):
+        return [self.left, self.right]
+
+    def cost(self, ctx):
+        """
+        Cost components:
+        - LHS expression cost.
+        - RHS expression cost.
+        - 1 (to perform the comparison)
+        """
+        lhsCost = self.left.cost(ctx)
+        rhsCost = self.right.cost(ctx)
+        return lhsCost + rhsCost + 1 * ctx['iters']
+
+# Basic Binary expressions, whose cost is computed as being
+# the costs of the LHS and RHS expressions + 1 for the
+# actual instruction.
+class GreaterThan(BinaryExpr):  pass
+class LogicalAnd(BinaryExpr):   pass
+class BitwiseAnd(BinaryExpr):   pass
+
+class For(Expr):
+    # A for loop.
+    def __init__(self, iters, expr):
+        self.iters = iters
+        self.expr = expr
+
+class If(Expr):
+    # A conditional branch.
+    def __init__(self, cond, true, false):
+        self.cond = cond
+        self.true = true
+        self.false = false
+
+class Lookup(Expr):
+    # A memory lookup into an array.
+    def __init__(self, vector, index):
+        self.vector = vector
+        self.index = index
+
+    def __eq__(self, other):
+            return isinstance(other, Lookup) and\
+                    self.vector == other.vector and\
+                    self.index == other.index
+
+    def __hash__(self):
+        return hash(self.vector + str(self.index))
+
