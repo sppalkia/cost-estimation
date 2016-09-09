@@ -10,6 +10,9 @@ class Expr:
             Expr.newId += 1
         return self._id
 
+    def cost(self, ctx):
+        raise NotImplementedError
+
     def children(self):
         return []
 
@@ -43,12 +46,20 @@ class BinaryExpr(Expr):
 class GreaterThan(BinaryExpr):  pass
 class LogicalAnd(BinaryExpr):   pass
 class BitwiseAnd(BinaryExpr):   pass
+class Add(BinaryExpr):  pass
+class Subtract(BinaryExpr):  pass
+class Multiply(BinaryExpr):  pass
+class Divide(BinaryExpr):  pass
 
 class For(Expr):
     # A for loop.
-    def __init__(self, iters, expr):
+    def __init__(self, iters, stride, expr):
         self.iters = iters
+        self.stride = stride
         self.expr = expr
+
+    def children(self):
+        return [self.expr]
 
 class If(Expr):
     # A conditional branch.
@@ -57,10 +68,14 @@ class If(Expr):
         self.true = true
         self.false = false
 
+    def children(self):
+        return [self.cond, self.true, self.false]
+
 class Lookup(Expr):
     # A memory lookup into an array.
-    def __init__(self, vector, index):
+    def __init__(self, vector, index=None):
         self.vector = vector
+        # None index means sequential stride in a loop.
         self.index = index
 
     def __eq__(self, other):
@@ -70,4 +85,8 @@ class Lookup(Expr):
 
     def __hash__(self):
         return hash(self.vector + str(self.index))
+
+    def cost(self, ctx):
+        # Memory access costs determined separately.
+        return 0
 
