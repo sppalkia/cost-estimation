@@ -6,8 +6,9 @@ EXEC=bench
 
 all:
 	${CC} q6_bench.c ${CFLAGS} -S -emit-llvm
+	${CC} -o ${EXEC} q6_bench.ll
 
 clean:
-	rm -f ${EXEC}
+	rm -f q6_bench.ll ${EXEC}
 
 
