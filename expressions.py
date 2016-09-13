@@ -19,7 +19,7 @@ class Expr:
 # Literals have no cost.
 class Literal(Expr):
     def cost(self, ctx):
-        return 0
+        return 0.
 
 class BinaryExpr(Expr):
     def __init__(self, left, right):
@@ -38,7 +38,7 @@ class BinaryExpr(Expr):
         """
         lhsCost = self.left.cost(ctx)
         rhsCost = self.right.cost(ctx)
-        return lhsCost + rhsCost + 1 * ctx['iters']
+        return lhsCost + rhsCost + 1. * ctx['iters']
 
 # Basic Binary expressions, whose cost is computed as being
 # the costs of the LHS and RHS expressions + 1 for the
@@ -71,6 +71,10 @@ class If(Expr):
     def children(self):
         return [self.cond, self.true, self.false]
 
+    def cost(self, ctx):
+        # TODO: Some cost to branching, perhaps to model prediction.
+        return 0.
+
 class Lookup(Expr):
     # A memory lookup into an array.
     def __init__(self, vector, index=None):
@@ -88,5 +92,5 @@ class Lookup(Expr):
 
     def cost(self, ctx):
         # Memory access costs determined separately.
-        return 0
+        return 0.
 
