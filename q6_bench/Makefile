@@ -5,7 +5,7 @@ EXEC=bench
 .PHONY: all clean
 
 all:
-	${CC} q6_bench.c ${CFLAGS} -S -emit-llvm
+	${CC} q6_bench.c ${CFLAGS} -o bench
 
 clean:
 	rm -f ${EXEC}

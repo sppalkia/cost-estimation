@@ -21,6 +21,9 @@ class Literal(Expr):
     def cost(self, ctx):
         return 0.
 
+    def __str__(self):
+        return "X"
+
 class BinaryExpr(Expr):
     def __init__(self, left, right):
         self.left = left
@@ -43,13 +46,27 @@ class BinaryExpr(Expr):
 # Basic Binary expressions, whose cost is computed as being
 # the costs of the LHS and RHS expressions + 1 for the
 # actual instruction.
-class GreaterThan(BinaryExpr):  pass
-class LogicalAnd(BinaryExpr):   pass
-class BitwiseAnd(BinaryExpr):   pass
-class Add(BinaryExpr):  pass
-class Subtract(BinaryExpr):  pass
-class Multiply(BinaryExpr):  pass
-class Divide(BinaryExpr):  pass
+class GreaterThan(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + ">" + str(self.right)
+class LogicalAnd(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "&&" + str(self.right)
+class BitwiseAnd(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "&" + str(self.right)
+class Add(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "+" + str(self.right)
+class Subtract(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "-" + str(self.right)
+class Multiply(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "*" + str(self.right)
+class Divide(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "/" + str(self.right)
 
 class For(Expr):
     # A for loop.
@@ -60,6 +77,11 @@ class For(Expr):
 
     def children(self):
         return [self.expr]
+
+    def __str__(self):
+        return "for({0},{1},{2})".format(str(self.iters),
+                str(self.stride),
+                str(self.expr))
 
 class If(Expr):
     # A conditional branch.
@@ -73,7 +95,13 @@ class If(Expr):
 
     def cost(self, ctx):
         # TODO: Some cost to branching, perhaps to model prediction.
-        return 0.
+        # Right now, this assumes a selectivity of 1.
+        return self.cond.cost(ctx) +self.true.cost(ctx)
+
+    def __str__(self):
+        return "if({0},{1},{2})".format(str(self.cond),
+                str(self.true),
+                str(self.false))
 
 class Lookup(Expr):
     # A memory lookup into an array.
@@ -89,6 +117,10 @@ class Lookup(Expr):
 
     def __hash__(self):
         return hash(self.vector + str(self.index))
+
+    def __str__(self):
+        return "lookup({0},{1})".format(str(self.vector),
+                str(self.index) if self.index is not None else "i")
 
     def cost(self, ctx):
         # Memory access costs determined separately.
