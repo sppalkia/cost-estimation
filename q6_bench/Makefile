@@ -8,6 +8,6 @@ all:
 	${CC} q6_bench.c ${CFLAGS} -o bench
 
 clean:
-	rm -f ${EXEC}
+	rm -f q6_bench.ll ${EXEC}
 
 
