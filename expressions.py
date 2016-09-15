@@ -1,5 +1,7 @@
 # Implements dummy expression objects to test cost model logic on.
 
+import math
+
 class Expr:
     # Root expression class
     newId = 0
@@ -16,9 +18,20 @@ class Expr:
     def children(self):
         return []
 
+    def p_execute(self):
+        """
+        The probability that this node will be executed.
+        """
+        return 1.0
+
 # Literals have no cost.
 class Literal(Expr):
     def cost(self, ctx):
+        if "selectivity" in ctx:
+            self.p_execute = ctx["selectivity"]
+        else:
+            self.p_execute = 1.0
+
         return 0.
 
     def __str__(self):
@@ -39,6 +52,11 @@ class BinaryExpr(Expr):
         - RHS expression cost.
         - 1 (to perform the comparison)
         """
+        if "selectivity" in ctx:
+            self.p_execute = ctx["selectivity"]
+        else:
+            self.p_execute = 1.0
+
         lhsCost = self.left.cost(ctx)
         rhsCost = self.right.cost(ctx)
         return lhsCost + rhsCost + 1. * ctx['iters']
@@ -85,18 +103,44 @@ class For(Expr):
 
 class If(Expr):
     # A conditional branch.
+    # Possible annotations:
     def __init__(self, cond, true, false):
         self.cond = cond
         self.true = true
         self.false = false
 
+        # Annotations are just fields in the object.
+        self.selectivity = 1.0
+
     def children(self):
         return [self.cond, self.true, self.false]
 
     def cost(self, ctx):
-        # TODO: Some cost to branching, perhaps to model prediction.
-        # Right now, this assumes a selectivity of 1.
-        return self.cond.cost(ctx) +self.true.cost(ctx)
+        condCost = self.cond.cost(ctx)
+        if "selectivity" in ctx:
+            ctx["selectivity"] *= self.selectivity
+            old_s = ctx["selectivity"]
+        else: 
+            ctx["selectivity"] = self.selectivity
+            old_s = 1.0
+
+        p_true = ctx["selectivity"]
+        trueCost = self.true.cost(ctx)
+
+        p_false = old_s * (1 - self.selectivity)
+        ctx["selectivity"] = p_false
+        falseCost = self.false.cost(ctx)
+
+        # Restore the selectivity; this effectively "pops" downstream changes.
+        ctx["selectivity"] = old_s
+        self.p_execute = ctx["selectivity"]
+
+        # A penalty for branch mispredicts. Closer to 0 (no penalty) when
+        # selectivities are predictable, i.e. closer to 0 or 1.
+        # TODO: Punishes selectivities that are moderately predicatable too much.
+        branch_penalty = 1 - (0.5 * math.cos(2 * math.pi * self.selectivity) + 0.5)
+        return condCost + p_true * trueCost + p_false * self.false.cost(ctx) +\
+                branch_penalty * ctx["iters"] * 15
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),
@@ -124,5 +168,9 @@ class Lookup(Expr):
 
     def cost(self, ctx):
         # Memory access costs determined separately.
-        return 0.
+        if "selectivity" in ctx:
+            self.p_execute = ctx["selectivity"]
+        else:
+            self.p_execute = 1.0
 
+        return 0.

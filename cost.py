@@ -59,7 +59,6 @@ def cost(expr, block_sizes, latencies):
             _get_lookups(c, lookups)
         return lookups
 
-
     # The list of lookups.
     lookups = list(_get_lookups(expr))
     # The cost for a given lookup for the L1 and L2 cache.
@@ -69,28 +68,23 @@ def cost(expr, block_sizes, latencies):
 
     for l in lookups:
         # TODO strides
-        # TODO selectivities
         # Strides can be:
         #   Constant -- access is sequential?
         #   Random (Unknown/Dynamic -- all access is random)
-        for block_size, latency in zip(block_sizes[:len(block_sizes)],\
-                latencies[:len(latencies)]):
-            seq_cost = sequential_cost(1.0, 4 * expr.stride,
+        for block_size, latency in zip(block_sizes[:len(block_sizes)-1],\
+                latencies[:len(latencies)-1]):
+            seq_cost = sequential_cost(l.p_execute, 4 * expr.stride,
                 expr.iters / expr.stride, block_size, latency)
-            rnd_cost = random_cost(1.0, 4 * expr.stride,
+            rnd_cost = random_cost(l.p_execute, 4 * expr.stride,
                 expr.iters / expr.stride, block_size, latency)
             lookup_costs.append(seq_cost + rnd_cost)
 
-        l3_seq_cost = sequential_cost(1.0, 4 * expr.stride,\
+        l3_seq_cost = sequential_cost(l.p_execute, 4 * expr.stride,\
                 expr.iters / expr.stride, block_sizes[-1], latencies[-1])
         lookup_costs.append(l3_seq_cost)
-        l3_rnd_cost = random_cost(1.0, 4 * expr.stride,\
+        l3_rnd_cost = random_cost(l.p_execute, 4 * expr.stride,\
                 expr.iters / expr.stride, block_sizes[-1], latencies[-2])
         l3_seq_costs.append(l3_rnd_cost)
-
-    print lookup_costs
-    print max(l3_seq_costs)
-    print p_cost
 
     # Get the highest L3 sequential cost. We assume all the prefetched L3 lines
     # are prefetched in parallel.
