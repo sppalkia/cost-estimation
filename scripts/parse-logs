@@ -23,12 +23,14 @@ def main(inputFile, outputFile):
         allVs.add(vs)
         if vs not in branchedTimes: branchedTimes[vs] = dict()
         if vs not in noBranchedTimes: noBranchedTimes[vs] = dict()
+        if sel not in branchedTimes[vs]: branchedTimes[vs][sel] = []
+        if sel not in noBranchedTimes[vs]: noBranchedTimes[vs][sel] = []
       elif "Branched" in line:
         time = float(line.split()[1])
-        branchedTimes[vs][sel] = time
+        branchedTimes[vs][sel].append(time)
       elif "No Branch" in line:
         time = float(line.split()[2])
-        noBranchedTimes[vs][sel] = time
+        noBranchedTimes[vs][sel].append(time)
 
   # Now, write out parsed data in the format expected by Gnuplot:
   #
@@ -50,8 +52,8 @@ def main(inputFile, outputFile):
     for sel in sels:
       f.write("%.2f" % sel)
       for vs in allVs:
-        f.write(" %.2f" % branchedTimes[vs][sel])
-        f.write(" %.2f" % noBranchedTimes[vs][sel])
+        f.write(" %.2f" % (sum(branchedTimes[vs][sel]) / len(branchedTimes[vs][sel])))
+        f.write(" %.2f" % (sum(noBranchedTimes[vs][sel]) / len(noBranchedTimes[vs][sel])))
       f.write("\n")
 
 
