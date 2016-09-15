@@ -1,5 +1,8 @@
 *.pyc
 *.swp
 *.ll
+*.DS_Store
+*.out
+*.pdf
 out
 bench

@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+import argparse
+
+def main(inputFile, outputFile):
+  branchedTimes = dict()
+  noBranchedTimes = dict()
+  sels = set()
+  allVs = set()
+  with open(inputFile, 'r') as f:
+    vs, sel = None, None
+    for line in f:
+      if "vs" in line and "sel" in line:
+        [vsStr, selStr] = line.split(", ")
+        vs = int(vsStr.split("=")[1])
+        sel = float(selStr.split("=")[1])
+        sels.add(sel)
+        allVs.add(vs)
+        if vs not in branchedTimes: branchedTimes[vs] = dict()
+        if vs not in noBranchedTimes: noBranchedTimes[vs] = dict()
+      elif "Branched" in line:
+        time = float(line.split()[1])
+        branchedTimes[vs][sel] = time
+      elif "No Branch" in line:
+        time = float(line.split()[2])
+        noBranchedTimes[vs][sel] = time
+
+  sels = list(sels); sels.sort()
+  with open(outputFile, 'w') as f:
+    headerStrs = list()
+    for vs in allVs:
+      headerStrs.append("Number of Vs=%d (Branched)" % vs)
+      headerStrs.append("Number of Vs=%d (Not branched)" % vs)
+    f.write("#\t%s\n" % "\t".join(headerStrs))
+    for sel in sels:
+      f.write("%.2f" % sel)
+      for vs in allVs:
+        f.write(" %.2f" % branchedTimes[vs][sel])
+        f.write(" %.2f" % noBranchedTimes[vs][sel])
+      f.write("\n")
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+    description=("Produce plot of data dumped in provided data file")
+  )
+  parser.add_argument('-i', "--inputFile", required=True,
+    help="Name of file with raw data produced by test.sh")
+  parser.add_argument('-o', "--outputFile", required=True,
+    help="Name of file where parsed data needs to be dumped")
+
+  cmdLineArgs = parser.parse_args()
+  optDict = vars(cmdLineArgs)
+
+  main(optDict["inputFile"], optDict["outputFile"])

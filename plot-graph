@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+import argparse
+import subprocess
+
+
+def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot):
+  titles = None
+  with open(inputFile, 'r') as f:
+    titles = f.readline().strip("#").strip().split("\t")
+
+  colsToPlot = [int(colToPlot) for colToPlot in colsToPlot.split(",")]
+  plots = []
+  i = 2
+  for title in titles:
+    if (i-2) not in colsToPlot:
+      i += 1
+      continue
+    plots.append(
+      "\"%s\" using 1:%d with linespoints ls %d tit '%s'" % (
+        inputFile, i, i-1, title))
+    i += 1
+
+  outputFile = outputFileTemplate + ".eps"
+  gnuplotStr = """set terminal postscript eps color
+  set size 0.65
+  set output '%s'
+  set xlabel "%s"
+  set ylabel "%s"
+
+  set xtics border nomirror
+  set ytics border nomirror
+  set style fill empty
+  set grid
+
+  set key under
+  set key font ",8"
+  set key spacing 2
+
+  set style line 1 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 2 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 3 lw 1 lt 2 lc rgb 'blue' pt 9 ps 1;
+  set style line 4 lw 1 lt 4 lc rgb 'black' pt 11 ps 1;
+  set style line 5 lw 1 lt 6 lc rgb 'orange' pt 1 ps 1;
+  set style line 6 lw 1 lt 5 lc rgb 'coral' pt 5 ps 1;
+  set style line 7 lw 1 lt 8 lc rgb 'violet' pt 3 ps 1;
+
+  plot %s
+    """ % (outputFile, xLabel, yLabel, ", ".join(plots))
+
+  with open("plot.gnuplot", "w") as f:
+    f.write(gnuplotStr)
+  subprocess.call("gnuplot plot.gnuplot", shell=True)
+  subprocess.call("epstopdf %s" % outputFile, shell=True)
+  subprocess.call("rm %s" % outputFile, shell=True)
+  subprocess.call("mkdir -p %s; mv %s.pdf %s" % (outputDir, outputFileTemplate, outputDir), shell=True)
+  subprocess.call("rm plot.gnuplot", shell=True)
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+    description=("Produce plot of data dumped in provided data file")
+  )
+  parser.add_argument('-i', "--inputFile", required=True,
+    help="Name of file where data to be plotted resides")
+  parser.add_argument('-o', "--outputFileTemplate", required=True,
+    help="Output file template where data is to be plotted")
+  parser.add_argument('-x', "--xLabel", required=True,
+    help="Label associated with x-axis of graph")
+  parser.add_argument('-y', "--yLabel", required=True,
+    help="Label associated with y-axis of graph")
+  parser.add_argument('-d', "--outputDir", required=True,
+    help="Directory where *.pdf files need to be moved")
+  parser.add_argument('-c', "--colsToPlot", required=True,
+    help="Columns to plot")
+
+  cmdLineArgs = parser.parse_args()
+  optDict = vars(cmdLineArgs)
+
+  main(optDict["inputFile"], optDict["outputFileTemplate"], optDict["xLabel"], optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"])
+
