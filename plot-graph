@@ -83,5 +83,5 @@ if __name__ == '__main__':
   cmdLineArgs = parser.parse_args()
   optDict = vars(cmdLineArgs)
 
-  main(optDict["inputFile"], optDict["outputFileTemplate"], optDict["xLabel"], optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"])
-
+  main(optDict["inputFile"], optDict["outputFileTemplate"], optDict["xLabel"],
+       optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"])
