@@ -6,3 +6,5 @@
 *.pdf
 out
 bench
+costs_raw/
+q6_raw/

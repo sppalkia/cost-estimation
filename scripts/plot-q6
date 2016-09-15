@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$CBO" ]; then
+    echo "Set CBO to root of this repo."
+    exit 1
+fi  
+
+
+# The root CBO directory
+RAW=$CBO/q6_raw
+
+rm -rf $RAW
+rm -f $CBO/q6_plot.pdf 
+
+mkdir $RAW
+
+$CBO/q6_bench/test.sh > $RAW/q6_raw
+$CBO/scripts/parse-logs -i $RAW/q6_raw -o $RAW/q6Data
+$CBO/scripts/plot-graph -i $RAW/q6Data -o $CBO/q6_plot -x Selectivity -y Time -d $CBO -c 0,1,8,9

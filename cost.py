@@ -46,6 +46,7 @@ def cost(expr, block_sizes, latencies):
     # costs related to the memory heirarchy and assumes all values are loaded
     # into registers.
     p_cost = processing_cost(expr)
+    print p_cost
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -96,6 +97,9 @@ def cost(expr, block_sizes, latencies):
     # is masked by the prefetcher by "overlapping" it with the L1/L2
     # load costs and the processing cost.
     l3_cost = max(0.0, highest_l3_cost - (p_cost + mem_cost))
+
+    print mem_cost
+    print l3_cost
 
     # Return the sum of all the costs.
     return l3_cost + p_cost + mem_cost
