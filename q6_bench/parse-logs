@@ -1,8 +1,13 @@
 #!/usr/bin/env python
-
 import argparse
 
+"""Parses the raw logs produced by the ./test.sh script in this directory,
+   and produces a Gnuplot input data file that can be subsequently fed into
+   the `../plot-graph` script to produce a plot of the data"""
+
 def main(inputFile, outputFile):
+  # First, read the raw log from the ./test.sh script and parse out
+  # times and input parameters
   branchedTimes = dict()
   noBranchedTimes = dict()
   sels = set()
@@ -25,6 +30,16 @@ def main(inputFile, outputFile):
         time = float(line.split()[2])
         noBranchedTimes[vs][sel] = time
 
+  # Now, write out parsed data in the format expected by Gnuplot:
+  #
+  # #	<Col1 Name>	<Col2 Name> ...
+  # RowValue ColValue1 ColValue2 ....
+  #
+  # Here, the output file is prefaced by the 'header', which contains the
+  # the title of each line in the plot (separated by tab spaces)
+  # Every subsequent line is a list of space-delimited numbers (the first
+  # number being the row value, and all subsequent values being the corresponding
+  # column value
   sels = list(sels); sels.sort()
   with open(outputFile, 'w') as f:
     headerStrs = list()

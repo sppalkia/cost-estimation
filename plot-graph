@@ -3,11 +3,17 @@ import argparse
 import subprocess
 
 
+"""Given a Gnuplot input file (produced by a parsing script that converts raw input
+   to the desired format expected by Gnuplot), and provided input command line args,
+   creates a plot of the data"""
+
 def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot):
+  # Read titles from header of input file
   titles = None
   with open(inputFile, 'r') as f:
     titles = f.readline().strip("#").strip().split("\t")
 
+  # Create Gnuplot command to run, picking the provided column indices
   colsToPlot = [int(colToPlot) for colToPlot in colsToPlot.split(",")]
   plots = []
   i = 2
@@ -49,6 +55,8 @@ def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot):
 
   with open("plot.gnuplot", "w") as f:
     f.write(gnuplotStr)
+
+  # Run Gnuplot command to produce graph, then cleanup un-needed temporary files
   subprocess.call("gnuplot plot.gnuplot", shell=True)
   subprocess.call("epstopdf %s" % outputFile, shell=True)
   subprocess.call("rm %s" % outputFile, shell=True)
