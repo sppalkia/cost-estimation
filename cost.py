@@ -82,10 +82,10 @@ def cost(expr, block_sizes, latencies):
 
         l3_seq_cost = sequential_cost(l.p_execute, 4 * expr.stride,\
                 expr.iters / expr.stride, block_sizes[-1], latencies[-1])
-        lookup_costs.append(l3_seq_cost)
+        l3_seq_costs.append(l3_seq_cost)
         l3_rnd_cost = random_cost(l.p_execute, 4 * expr.stride,\
                 expr.iters / expr.stride, block_sizes[-1], latencies[-2])
-        l3_seq_costs.append(l3_rnd_cost)
+        lookup_costs.append(l3_rnd_cost)
 
     # Get the highest L3 sequential cost. We assume all the prefetched L3 lines
     # are prefetched in parallel.
