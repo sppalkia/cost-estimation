@@ -46,7 +46,6 @@ def cost(expr, block_sizes, latencies):
     # costs related to the memory heirarchy and assumes all values are loaded
     # into registers.
     p_cost = processing_cost(expr)
-    print p_cost
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -64,31 +63,48 @@ def cost(expr, block_sizes, latencies):
     lookups = list(_get_lookups(expr))
     # The cost for a given lookup for the L1 and L2 cache.
     lookup_costs = []
-    # The cost for a give lookup for the L3 cache.
+    # The cost for a given lookup for the L3 cache.
     l3_seq_costs = []
 
-    for l in lookups:
-        # TODO strides
-        # Strides can be:
-        #   Constant -- access is sequential?
-        #   Random (Unknown/Dynamic -- all access is random)
-        for block_size, latency in zip(block_sizes[:len(block_sizes)-1],\
-                latencies[:len(latencies)-1]):
-            seq_cost = sequential_cost(l.p_execute, 4 * expr.stride,
-                expr.iters / expr.stride, block_size, latency)
-            rnd_cost = random_cost(l.p_execute, 4 * expr.stride,
-                expr.iters / expr.stride, block_size, latency)
-            lookup_costs.append(seq_cost + rnd_cost)
+    for l in lookups: 
+        # Compute the cost of L1 access time. All elements do this access.
+        # Assume an element on a line is loaded "at once."
+        #l1_cost = expr.iters * expr.stride * 4 * latencies[0]
 
+        # Compute the cost of missing in L1.
+        l1_cost = sequential_cost(l.p_execute, 4 * expr.stride,
+            expr.iters / expr.stride, block_sizes[0], latencies[1])
+        l1_cost += random_cost(l.p_execute, 4 * expr.stride,
+                expr.iters / expr.stride, block_sizes[0], latencies[1])
+
+        # Compute the cost of missing in L2.
+        # TODO ignoring this now, assuming an L3 miss loads data into L2 as well.
+        l2_cost = sequential_cost(l.p_execute, 4 * expr.stride,
+            expr.iters / expr.stride, block_sizes[1], latencies[2])
+        l2_cost += random_cost(l.p_execute, 4 * expr.stride,
+                expr.iters / expr.stride, block_sizes[1], latencies[2])
+
+        # Compute the cost of missing in L3.
         l3_seq_cost = sequential_cost(l.p_execute, 4 * expr.stride,\
-                expr.iters / expr.stride, block_sizes[-1], latencies[-1])
-        l3_seq_costs.append(l3_seq_cost)
+                expr.iters / expr.stride, block_sizes[2], latencies[2])
         l3_rnd_cost = random_cost(l.p_execute, 4 * expr.stride,\
-                expr.iters / expr.stride, block_sizes[-1], latencies[-2])
-        lookup_costs.append(l3_rnd_cost)
+                expr.iters / expr.stride, block_sizes[2], latencies[3])
+
+        # Register loading cost.
+        # TODO probably an overestimate.
+        reg_cost = (expr.iters * 4 * expr.stride / 8) * l.p_execute
+
+        #print l1_cost
+        #print l2_cost
+        #print reg_cost
+        #print l.p_execute
+
+        lookup_costs.append(l1_cost + l3_rnd_cost + reg_cost)
+        l3_seq_costs.append(l3_seq_cost)
 
     # Get the highest L3 sequential cost. We assume all the prefetched L3 lines
     # are prefetched in parallel.
+    # TODO: A penalty for fetching more lines?
     highest_l3_cost = max(l3_seq_costs)
     # Sum the L1 and L2 lookup costs.
     mem_cost = sum(lookup_costs)
@@ -98,8 +114,9 @@ def cost(expr, block_sizes, latencies):
     # load costs and the processing cost.
     l3_cost = max(0.0, highest_l3_cost - (p_cost + mem_cost))
 
-    print mem_cost
-    print l3_cost
+    #print "Processing:" + str(p_cost)
+    #print "Memory Access:" + str(mem_cost)
+    #print "L3 Access:" + str(l3_cost)
 
     # Return the sum of all the costs.
     return l3_cost + p_cost + mem_cost

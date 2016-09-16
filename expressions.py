@@ -118,11 +118,11 @@ class If(Expr):
     def cost(self, ctx):
         condCost = self.cond.cost(ctx)
         if "selectivity" in ctx:
-            ctx["selectivity"] *= self.selectivity
             old_s = ctx["selectivity"]
+            ctx["selectivity"] *= self.selectivity
         else: 
-            ctx["selectivity"] = self.selectivity
             old_s = 1.0
+            ctx["selectivity"] = self.selectivity
 
         p_true = ctx["selectivity"]
         trueCost = self.true.cost(ctx)
@@ -140,7 +140,7 @@ class If(Expr):
         # TODO: Punishes selectivities that are moderately predicatable too much.
         branch_penalty = 1 - (0.5 * math.cos(2 * math.pi * self.selectivity) + 0.5)
         return condCost + p_true * trueCost + p_false * self.false.cost(ctx) +\
-                branch_penalty * ctx["iters"] * 15
+                branch_penalty * ctx["iters"] * 5
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),

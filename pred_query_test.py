@@ -45,7 +45,7 @@ The Scalar Predicatd Loop:
             (V0[i] > X) * (V1[i] + V2[i] + ... + Vn[i] + 0)
 """
 
-for v in xrange(1, 6):
+for v in [1, 5]:
     print "----- {0} -----".format(v)
     for s in [0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]:
         print "vs={0}, sel={1}".format(v, s)

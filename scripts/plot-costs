@@ -16,4 +16,4 @@ mkdir $RAW
 
 python $CBO/pred_query_test.py > $RAW/cost_raw
 $CBO/scripts/parse-logs -i $RAW/cost_raw -o $RAW/costData
-$CBO/scripts/plot-graph -i $RAW/costData -o $CBO/cost_plot -x Selectivity -y Cost -d $CBO -c 0,1,8,9
+$CBO/scripts/plot-graph -i $RAW/costData -o $CBO/cost_plot -x Selectivity -y Cost -d $CBO -c 0,1,2,3,4,5
