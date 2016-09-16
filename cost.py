@@ -71,26 +71,34 @@ def cost(expr, block_sizes, latencies):
         # Assume an element on a line is loaded "at once."
         #l1_cost = expr.iters * expr.stride * 4 * latencies[0]
 
-        # Compute the cost of missing in L1.
+        # Compute the cost of missing in L1.  This computes the probability of
+        # accessing a cache line, and then weights the number of accessed
+        # blocks (i.e., the total data size divded by the block size) by this
+        # probability and the L2 access latency.
         l1_cost = sequential_cost(l.p_execute, 4 * expr.stride,
             expr.iters / expr.stride, block_sizes[0], latencies[1])
         l1_cost += random_cost(l.p_execute, 4 * expr.stride,
                 expr.iters / expr.stride, block_sizes[0], latencies[1])
 
-        # Compute the cost of missing in L2.
-        # TODO ignoring this now, assuming an L3 miss loads data into L2 as well.
+        # Compute the cost of missing in L2 (same as description in L1).
+        # TODO we're ignoring this now, assuming an L3 miss loads data into L2
+        # as well/L2 data accesses are always prefetched from L3 and the
+        # prefetch time is less than the processing + L1 access time). This
+        # needs some refinement.
         l2_cost = sequential_cost(l.p_execute, 4 * expr.stride,
             expr.iters / expr.stride, block_sizes[1], latencies[2])
         l2_cost += random_cost(l.p_execute, 4 * expr.stride,
                 expr.iters / expr.stride, block_sizes[1], latencies[2])
 
-        # Compute the cost of missing in L3.
+        # Compute the cost of missing in L3. An L3 miss which is sequential
+        # is overlapped with the L1/processing cost. A random miss goes to
+        # memory.
         l3_seq_cost = sequential_cost(l.p_execute, 4 * expr.stride,\
-                expr.iters / expr.stride, block_sizes[2], latencies[2])
+                expr.iters / expr.stride, block_sizes[2], latencies[3])
         l3_rnd_cost = random_cost(l.p_execute, 4 * expr.stride,\
                 expr.iters / expr.stride, block_sizes[2], latencies[3])
 
-        # Register loading cost.
+        # Register loading cost (i.e. L1 access cost for each data element).
         # TODO probably an overestimate.
         reg_cost = (expr.iters * 4 * expr.stride / 8) * l.p_execute
 
@@ -104,7 +112,7 @@ def cost(expr, block_sizes, latencies):
 
     # Get the highest L3 sequential cost. We assume all the prefetched L3 lines
     # are prefetched in parallel.
-    # TODO: A penalty for fetching more lines?
+    # TODO bandwidth based penalty for more loads at once.
     highest_l3_cost = max(l3_seq_costs)
     # Sum the L1 and L2 lookup costs.
     mem_cost = sum(lookup_costs)

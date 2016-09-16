@@ -137,8 +137,7 @@ class If(Expr):
 
         # A penalty for branch mispredicts. Closer to 0 (no penalty) when
         # selectivities are predictable, i.e. closer to 0 or 1.
-        # TODO: Punishes selectivities that are moderately predicatable too much.
-        branch_penalty = 1 - (0.5 * math.cos(2 * math.pi * self.selectivity) + 0.5)
+        branch_penalty = -1 * pow(self.selectivity * 2 - 1, 2) + 1
         return condCost + p_true * trueCost + p_false * self.false.cost(ctx) +\
                 branch_penalty * ctx["iters"] * 5
 
