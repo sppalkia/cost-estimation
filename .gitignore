@@ -6,5 +6,7 @@
 *.pdf
 out
 bench
-costs_raw/
 q6_raw/
+q6_costs_raw/
+nested_loops_raw/
+nested_loops_costs_raw/
