@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+import argparse
+
+"""Parses the raw logs produced by the ./test.sh script in this directory,
+   and produces a Gnuplot input data file that can be subsequently fed into
+   the `../plot-graph` script to produce a plot of the data"""
+
+def main(inputFile, outputFile):
+  # First, read the raw log from the ./test.sh script and parse out
+  # times and input parameters
+  blockedTimes = dict()
+  unblockedTimes = dict()
+  ns = set()
+  ks = set()
+  with open(inputFile, 'r') as f:
+    k, n = None, None
+    for line in f:
+      if "k=" in line and "n=" in line:
+        [kStr, nStr] = line.split(", ")
+        k = int(kStr.split("=")[1])
+        n = float(nStr.split("=")[1])
+        ns.add(n)
+        ks.add(k)
+        if k not in blockedTimes: blockedTimes[k] = dict()
+        if k not in unblockedTimes: unblockedTimes[k] = dict()
+        if n not in blockedTimes[k]: blockedTimes[k][n] = []
+        if n not in unblockedTimes[k]: unblockedTimes[k][n] = []
+      elif "Blocked" in line:
+        time = float(line.split()[1])
+        blockedTimes[k][n].append(time / k)
+      elif "Unblocked" in line:
+        time = float(line.split()[1])
+        unblockedTimes[k][n].append(time / k)
+
+  # Now, write out parsed data in the format expected by Gnuplot:
+  #
+  # #	<Col1 Name>	<Col2 Name> ...
+  # RowValue ColValue1 ColValue2 ....
+  #
+  # Here, the output file is prefaced by the 'header', which contains the
+  # the title of each line in the plot (separated by tab spaces)
+  # Every subsequent line is a list of space-delimited numbers (the first
+  # number being the row value, and all subsequent values being the corresponding
+  # column value
+  ns = list(ns); ns.sort()
+  with open(outputFile, 'w') as f:
+    headerStrs = list()
+    for k in ks:
+      headerStrs.append("k=%d (Blocked)" % k)
+      headerStrs.append("k=%d (Not blocked)" % k)
+    f.write("#\t%s\n" % "\t".join(headerStrs))
+    for n in ns:
+      f.write("%.2f" % n)
+      for k in ks:
+        f.write(" %.2f" % (sum(blockedTimes[k][n]) / len(blockedTimes[k][n])))
+        f.write(" %.2f" % (sum(unblockedTimes[k][n]) / len(unblockedTimes[k][n])))
+      f.write("\n")
+
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+    description=("Produce plot of data dumped in provided data file")
+  )
+  parser.add_argument('-i', "--inputFile", required=True,
+    help="Name of file with raw data produced by test.sh")
+  parser.add_argument('-o', "--outputFile", required=True,
+    help="Name of file where parsed data needs to be dumped")
+
+  cmdLineArgs = parser.parse_args()
+  optDict = vars(cmdLineArgs)
+
+  main(optDict["inputFile"], optDict["outputFile"])

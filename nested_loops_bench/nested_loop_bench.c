@@ -1,0 +1,113 @@
+/*
+ * A test utility to check how our model captures simple nested loops.
+ *
+ * This test runs the following query:
+ *
+ *  for i in range(k):
+ *      for each element in A:
+ *          sum += A[i]
+ *
+ * - n is a configurable parameter.
+ * - k, the number of times the loop is run, is also a configurable parameter.
+ *
+ * The loop can be run un-changed, or blocked (to make better use of cache
+ * locality).
+ *
+ * The cost model should provide an ordering equivalent to the performance
+ * of the various loops.
+ *
+ */
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/time.h>
+
+#define BLOCK_SIZE 1024
+
+// Represents generated data.
+struct gen_data {
+    int *A;
+
+    size_t k;
+    size_t n;
+};
+
+long unblocked_nested_loops_query(struct gen_data *d) {
+  long sum = 0;
+  for (int i = 0; i < d->k; i++) {
+    for (int j = 0; j < d->n; j++) {
+      sum += d->A[j];
+    }
+  }
+  return sum;
+}
+
+// TODO: Fix this. Implement blocked implementation here to check how well
+// runtime is estimated in this regime
+long blocked_nested_loops_query(struct gen_data *d) {
+  return 0;
+}
+
+struct gen_data load_data(size_t k,
+        size_t n) {
+    struct gen_data d;
+    d.k = k;
+    d.n = n;
+    d.A = (int *)malloc(sizeof(int) * n);
+
+    for (int i = 0; i < n; i++) {
+      d.A[i] = random() % 100;
+    }
+
+    return d;
+}
+
+// Implementations of data generator given selectivity.
+int main(int argc, char **argv) {
+
+    // Default values
+    // Number of loads when predicate matches.
+    int k = 1;
+    // Number of elements in array (should be >> cache size);
+    int n = (1E8 / sizeof(int));
+
+    int ch;
+    while ((ch = getopt(argc, argv, "k:n:")) != -1) {
+        switch (ch) {
+            case 'k':
+                k = atoi(optarg);
+                break;
+            case 'n':
+                n = atof(optarg);
+                break;
+            case '?':
+            default:
+                fprintf(stderr, "invalid options");
+                exit(1);
+        }
+    }
+
+    printf("k=%d, n=%d\n", k, n); 
+
+    struct gen_data d = load_data(k, n);
+    long sum;
+    struct timeval start, end, diff;
+
+    gettimeofday(&start, 0);
+    sum = unblocked_nested_loops_query(&d);
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("Unblocked: %ld.%06ld (result=%ld)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
+    gettimeofday(&start, 0);
+    sum = blocked_nested_loops_query(&d);
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("Blocked: %ld.%06ld (result=%ld)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
+    return 0;
+}
