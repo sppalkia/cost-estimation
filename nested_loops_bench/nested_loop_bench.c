@@ -45,10 +45,27 @@ long unblocked_nested_loops_query(struct gen_data *d) {
     return sum;
 }
 
-// TODO: Fix this. Implement blocked implementation here to check how well
-// runtime is estimated in this regime
 long blocked_nested_loops_query(struct gen_data *d) {
-    return 0;
+    long sum = 0;
+    for (int j = 0; j < d->n; j += BLOCK_SIZE) {
+        int numElementsToTraverse = (BLOCK_SIZE <= (d->n - j)) ? BLOCK_SIZE : (d->n - j);
+        for (int i = 0; i < d->k; i++) {
+            for (int k = 0; k < numElementsToTraverse; k++) {
+                sum += d->A[j+k];
+            }
+        }
+    }
+    return sum;
+}
+
+long interchanged_nested_loops_query(struct gen_data *d) {
+    long sum = 0;
+    for (int j = 0; j < d->n; j++) {
+        for (int i = 0; i < d->k; i++) {
+            sum += d->A[j];
+        }
+    }
+    return sum;
 }
 
 struct gen_data load_data(size_t k,
@@ -109,6 +126,13 @@ int main(int argc, char **argv) {
     gettimeofday(&end, 0);
     timersub(&end, &start, &diff);
     printf("Blocked: %ld.%06ld (result=%ld)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
+    gettimeofday(&start, 0);
+    sum = interchanged_nested_loops_query(&d);
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("Interchanged: %ld.%06ld (result=%ld)\n",
             (long) diff.tv_sec, (long) diff.tv_usec, sum);
 
     return 0;
