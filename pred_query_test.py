@@ -54,8 +54,8 @@ for v in [1, 5]:
         branch_expr = If(condition, lookups, Literal())
         branch_expr.selectivity = s
 
-        branched_loop = For(iterations, 1, branch_expr)
-        predicated_expr = For(iterations, 1, Multiply(condition, lookups))
+        branched_loop = For(iterations, Id("_"), 1, branch_expr)
+        predicated_expr = For(iterations, Id("_"), 1, Multiply(condition, lookups))
 
         # Compute and Print Costs
         c = cost(branched_loop, block_sizes, latencies)

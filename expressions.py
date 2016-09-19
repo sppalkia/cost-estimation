@@ -37,6 +37,21 @@ class Literal(Expr):
     def __str__(self):
         return "X"
 
+class Id(Expr):
+    def __init__(self, name):
+        self.name = name
+
+    def cost(self, ctx):
+        return 0
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        if not isinstance(other, Id):
+            return False
+        return self.name == other.name
+
 class BinaryExpr(Expr):
     def __init__(self, left, right):
         self.left = left
@@ -59,7 +74,7 @@ class BinaryExpr(Expr):
 
         lhsCost = self.left.cost(ctx)
         rhsCost = self.right.cost(ctx)
-        return lhsCost + rhsCost + 1. * ctx['iters']
+        return lhsCost + rhsCost + 1.
 
 # Basic Binary expressions, whose cost is computed as being
 # the costs of the LHS and RHS expressions + 1 for the
@@ -88,18 +103,35 @@ class Divide(BinaryExpr):
 
 class For(Expr):
     # A for loop.
-    def __init__(self, iters, stride, expr):
+    def __init__(self, iters, loopIdx, stride, expr):
+        # The range of this loop. An 'iters' value of 1000 with a stride of 8
+        # means the loop body will be executed 1000 / 8 = 125 times.
         self.iters = iters
+        # Stride (designates vectorization).
         self.stride = stride
+        # The loop index variable (must be an Id)
+        self.loopIdx = loopIdx
+        # The expression representing the body of this loop.
         self.expr = expr
+
+        # Some simple type checking to prevent Pythonic headaches.
+        assert isinstance(self.loopIdx, Id)
+        assert isinstance(self.expr, Expr)
 
     def children(self):
         return [self.expr]
 
     def __str__(self):
-        return "for({0},{1},{2})".format(str(self.iters),
+        return "for({0},{1},{2},{3})".format(str(self.iters),
+                str(self.loopIdx),
                 str(self.stride),
                 str(self.expr))
+
+    def cost(self, ctx):
+        iterations = self.iters / self.stride
+        exprCost = self.expr.cost(ctx)
+        return exprCost * iterations
+
 
 class If(Expr):
     # A conditional branch.
@@ -137,9 +169,9 @@ class If(Expr):
 
         # A penalty for branch mispredicts. Closer to 0 (no penalty) when
         # selectivities are predictable, i.e. closer to 0 or 1.
-        branch_penalty = -1 * pow(self.selectivity * 2 - 1, 2) + 1
+        branch_penalty = -1. * pow(self.selectivity * 2. - 1., 2.) + 1.
         return condCost + p_true * trueCost + p_false * self.false.cost(ctx) +\
-                branch_penalty * ctx["iters"] * 5
+                branch_penalty * 5.0
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),
