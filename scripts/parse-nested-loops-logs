@@ -8,27 +8,36 @@ import argparse
 def main(inputFile, outputFile):
   # First, read the raw log from the ./test.sh script and parse out
   # times and input parameters
-  branchedTimes = dict()
-  noBranchedTimes = dict()
-  sels = set()
-  allVs = set()
+  blockedTimes = dict()
+  unblockedTimes = dict()
+  interchangedTimes = dict()
+  ns = set()
+  ks = set()
   with open(inputFile, 'r') as f:
-    vs, sel = None, None
+    k, n = None, None
     for line in f:
-      if "vs" in line and "sel" in line:
-        [vsStr, selStr] = line.split(", ")
-        vs = int(vsStr.split("=")[1])
-        sel = float(selStr.split("=")[1])
-        sels.add(sel)
-        allVs.add(vs)
-        if vs not in branchedTimes: branchedTimes[vs] = dict()
-        if vs not in noBranchedTimes: noBranchedTimes[vs] = dict()
-      elif "Branched" in line:
+      if "k=" in line and "n=" in line:
+        [kStr, nStr] = line.split(", ")
+        k = int(kStr.split("=")[1])
+        n = float(nStr.split("=")[1])
+        ns.add(n)
+        ks.add(k)
+
+        if k not in blockedTimes: blockedTimes[k] = dict()
+        if k not in unblockedTimes: unblockedTimes[k] = dict()
+        if k not in interchangedTimes: interchangedTimes[k] = dict()
+        if n not in blockedTimes[k]: blockedTimes[k][n] = []
+        if n not in unblockedTimes[k]: unblockedTimes[k][n] = []
+        if n not in interchangedTimes[k]: interchangedTimes[k][n] = []
+      elif "Blocked" in line:
         time = float(line.split()[1])
-        branchedTimes[vs][sel] = time
-      elif "No Branch" in line:
-        time = float(line.split()[2])
-        noBranchedTimes[vs][sel] = time
+        blockedTimes[k][n].append(time / k)
+      elif "Unblocked" in line:
+        time = float(line.split()[1])
+        unblockedTimes[k][n].append(time / k)
+      elif "Interchanged" in line:
+        time = float(line.split()[1])
+        interchangedTimes[k][n].append(time / k)
 
   # Now, write out parsed data in the format expected by Gnuplot:
   #
@@ -40,18 +49,20 @@ def main(inputFile, outputFile):
   # Every subsequent line is a list of space-delimited numbers (the first
   # number being the row value, and all subsequent values being the corresponding
   # column value
-  sels = list(sels); sels.sort()
+  ns = list(ns); ns.sort()
   with open(outputFile, 'w') as f:
     headerStrs = list()
-    for vs in allVs:
-      headerStrs.append("Number of Vs=%d (Branched)" % vs)
-      headerStrs.append("Number of Vs=%d (Not branched)" % vs)
+    for k in ks:
+      headerStrs.append("k=%d (Blocked)" % k)
+      headerStrs.append("k=%d (Not blocked)" % k)
+      headerStrs.append("k=%d (Interchanged)" % k)
     f.write("#\t%s\n" % "\t".join(headerStrs))
-    for sel in sels:
-      f.write("%.2f" % sel)
-      for vs in allVs:
-        f.write(" %.2f" % branchedTimes[vs][sel])
-        f.write(" %.2f" % noBranchedTimes[vs][sel])
+    for n in ns:
+      f.write("%.2f" % n)
+      for k in ks:
+        f.write(" %.2f" % (sum(blockedTimes[k][n]) / len(blockedTimes[k][n])))
+        f.write(" %.2f" % (sum(unblockedTimes[k][n]) / len(unblockedTimes[k][n])))
+        f.write(" %.2f" % (sum(interchangedTimes[k][n]) / len(interchangedTimes[k][n])))
       f.write("\n")
 
 
