@@ -8,10 +8,11 @@
  *          sum += A[i]
  *
  * - n is a configurable parameter.
- * - k, the number of times the loop is run, is also a configurable parameter.
+ * - k, the number of times the entire array is looped over, is also a
+ *   configurable parameter.
  *
  * The loop can be run un-changed, or blocked (to make better use of cache
- * locality).
+ * locality), or with loop order inverted.
  *
  * The cost model should provide an ordering equivalent to the performance
  * of the various loops.
@@ -35,19 +36,19 @@ struct gen_data {
 };
 
 long unblocked_nested_loops_query(struct gen_data *d) {
-  long sum = 0;
-  for (int i = 0; i < d->k; i++) {
-    for (int j = 0; j < d->n; j++) {
-      sum += d->A[j];
+    long sum = 0;
+    for (int i = 0; i < d->k; i++) {
+        for (int j = 0; j < d->n; j++) {
+            sum += d->A[j];
+        }
     }
-  }
-  return sum;
+    return sum;
 }
 
 // TODO: Fix this. Implement blocked implementation here to check how well
 // runtime is estimated in this regime
 long blocked_nested_loops_query(struct gen_data *d) {
-  return 0;
+    return 0;
 }
 
 struct gen_data load_data(size_t k,
@@ -58,19 +59,20 @@ struct gen_data load_data(size_t k,
     d.A = (int *)malloc(sizeof(int) * n);
 
     for (int i = 0; i < n; i++) {
-      d.A[i] = random() % 100;
+        d.A[i] = random() % 100;
     }
 
     return d;
 }
 
-// Implementations of data generator given selectivity.
+// Implementations of data generator given number of times the array should
+// be passed over, and the number of elements in the array.
 int main(int argc, char **argv) {
 
     // Default values
-    // Number of loads when predicate matches.
+    // Number of times the entire array is passed over
     int k = 1;
-    // Number of elements in array (should be >> cache size);
+    // Number of elements in array
     int n = (1E8 / sizeof(int));
 
     int ch;
