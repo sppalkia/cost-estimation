@@ -3,13 +3,15 @@ Tests costs of the following loops:
 
 for i in range(N):
     for j in range(M):
-        sum += A[j]
+        if A[j] > X:
+            sum += A[j]
 
 and
 
 for j in range(M):
     for i in range(N):
-        sum += A[j]
+        if A[j] > X:
+            sum += A[j]
 
 The cost of the two queries should be equal.
 
@@ -27,12 +29,19 @@ def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
 inner_id = Id("j")
-inner_loop = For(iterations, inner_id, 1, Add(Lookup("A", inner_id), Literal()))
+predicate = If(GreaterThan(Lookup("A", inner_id), Literal()), Add(Literal(), Literal()), Literal())
+# The predicate is data dependent and unpredictable.
+predicate.selectivity = 0.5
+inner_loop = For(iterations, inner_id, 1, predicate)
 outer_loop = For(iterations, Id("i"), 1, inner_loop)
 
+
 # Interchange the loops.
-inner_loop_2 = For(iterations, Id("i"), 1, Add(Lookup("A", inner_id), Literal()))
+inner_loop_2 = For(iterations, Id("i"), 1, predicate)
 outer_loop_2 = For(iterations, inner_id, 1, inner_loop_2)
+
+print outer_loop
+print outer_loop_2
 
 print cost(outer_loop, block_sizes, latencies)
 print cost(outer_loop_2, block_sizes, latencies)

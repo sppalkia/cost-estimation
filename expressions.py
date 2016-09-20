@@ -2,6 +2,8 @@
 
 import math
 
+from reuse_distance import *
+
 class Expr:
     # Root expression class
     newId = 0
@@ -128,8 +130,14 @@ class For(Expr):
                 str(self.expr))
 
     def cost(self, ctx):
+        if "loops" not in ctx:
+            ctx["loops"] = []
+
+        # Keep a stack of loops so costs can be derived based on loop nesting.
+        ctx["loops"].append((self.iters, self.loopIdx))
         iterations = self.iters / self.stride
         exprCost = self.expr.cost(ctx)
+        ctx["loops"].pop()
         return exprCost * iterations
 
 
@@ -149,10 +157,29 @@ class If(Expr):
 
     def cost(self, ctx):
         condCost = self.cond.cost(ctx)
+
+        # TODO Simplistic, but we assume the condition depends on lookups
+        # and constants only. We can thus determine a branch prediction cost
+        # depending on whether the same "result" from the branch condition is
+        # used multiple times.
+        ids = []
+        stack = [self.cond]
+        while len(stack) != 0:
+            node = stack.pop()
+            for c in node.children():
+                stack.append(c)
+            if isinstance(node, Lookup):
+                ids.append(node)
+
+        # Get the smallest iteration distance. If it's sufficiently small, we
+        # use it to amortize the branch prediction cost.
+        it_distance = min([iteration_distance(id_node, ctx["loops"]) for id_node in ids])
+        print it_distance
+
         if "selectivity" in ctx:
             old_s = ctx["selectivity"]
             ctx["selectivity"] *= self.selectivity
-        else: 
+        else:
             old_s = 1.0
             ctx["selectivity"] = self.selectivity
 
@@ -170,7 +197,11 @@ class If(Expr):
         # A penalty for branch mispredicts. Closer to 0 (no penalty) when
         # selectivities are predictable, i.e. closer to 0 or 1.
         branch_penalty = -1. * pow(self.selectivity * 2. - 1., 2.) + 1.
-        return condCost + p_true * trueCost + p_false * self.false.cost(ctx) +\
+
+        # Picked this arbitrarily...
+        if it_distance > 10:
+            branch_penalty = 0.0
+        return condCost + p_true * trueCost + p_false * falseCost +\
                 branch_penalty * 5.0
 
     def __str__(self):
