@@ -22,7 +22,7 @@ stride 4 (for(V, 4, |x| -> x + (1,1,1,1))), the cost would become len(V) / 4
 since each instruction still only takes one cycle, but 1/4 the number of iterations
 are run.
 
-Memory cost captures the cost of loading values from the memory heirarchy. The 
+Memory cost captures the cost of loading values from the memory heirarchy. The
 primary aspect captured in the memory model is prefetching. The model computes,
 based on selectivity, the cost of moving data into the L1 cache and overlaps
 costs of fetching data into LLC (and eventually, L2) with the processing cost
@@ -45,18 +45,21 @@ def cost(expr, block_sizes, latencies):
     # N times, where N is the number of iterations in the loop. This ignores
     # costs related to the memory heirarchy and assumes all values are loaded
     # into registers.
-    p_cost = processing_cost(expr)
+    p_cost = expr.cost({})
 
-    def _get_lookups(expr, lookups=set()):
+    def _get_lookups(expr, lookups=set(), loopIndices=[]):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
         for c in expr.children():
-            # TODO need to associate each lookup with a access probability.
-            # TODO how what kind of lookup is it? Is it sequential? What's
-            # the stride? If the selectivity is non-zero and the stride
-            # isn't zero, how do we handle this?
+            # Record the loop index (tracks nested loops).
+            if isinstance(c, For):
+                loopIndices.append(c.loopIdx)
+            # Here, we'll annotate the Lookup nodes with a bunch of excess data
+            # (e.g., is it sequential, etc.). This is hacky since we're adding
+            # new fields to the object.
             if isinstance(c, Lookup):
+                c.sequential = is_sequential(c, loopIndices)
                 lookups.add(c)
-            _get_lookups(c, lookups)
+            _get_lookups(c, lookups, loopIndices)
         return lookups
 
     # The list of lookups.
@@ -66,7 +69,7 @@ def cost(expr, block_sizes, latencies):
     # The cost for a given lookup for the L3 cache.
     l3_seq_costs = []
 
-    for l in lookups: 
+    for l in lookups:
         # Compute the cost of L1 access time. All elements do this access.
         # Assume an element on a line is loaded "at once."
         #l1_cost = expr.iters * expr.stride * 4 * latencies[0]
@@ -129,9 +132,44 @@ def cost(expr, block_sizes, latencies):
     # Return the sum of all the costs.
     return l3_cost + p_cost + mem_cost
 
-def processing_cost(expr):
-    # Get the processing cost of an exprssion.
-    ctx = {}
-    ctx['iters'] = float(expr.iters / expr.stride)
-    # Return the processing cost of the For loop's expression.
-    return expr.expr.cost(ctx)
+def is_sequential(lookup, indices):
+    # given a lookup expression and an ordered list of loop
+    # indices (ordered by nesting), returns whether an access pattern
+    # is sequential.
+    #
+    # Caveat: Only consider simple arithmetic computations right now
+    # (i.e., only Add, Subtract, Multiply and Divide Expr nodes are allowed in the
+    # index computation).
+    #
+    # TODO this should later be augmented to return the "distance" of
+    # reuse between two accesses (e.g. A[j][i] has a reuse distance of len(j))
+
+    # None lookup nodes designate implicit sequential access.
+    if lookup is None:
+        return True
+
+    index = lookup.index
+    def contains(node, f):
+        if f == node:
+            return True
+        for c in node.children():
+            if contains(c, f):
+                return True
+        return False
+
+    # If the last loop index is accessed non-sequentially, the access is
+    # not sequential.
+    if isinstance(index, Multiply) or isinstance(index, Divide):
+        if contains(index, indices[-1]):
+            return False
+
+    # Don't support complex expressions for now.
+    if isinstance(index, BinaryExpr):
+        if not isinstance(index, Add) and not isinstance(index, Subtract):
+            raise ValueError
+
+    for c in index.children():
+        if not is_sequential(c, indicies):
+            return False
+    return True
+
