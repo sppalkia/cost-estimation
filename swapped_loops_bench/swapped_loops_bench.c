@@ -47,20 +47,7 @@ long unblocked_nested_loops_query(struct gen_data *d) {
     return sum;
 }
 
-long blocked_nested_loops_query(struct gen_data *d) {
-    long sum = 0;
-    for (int j = 0; j < d->n; j += BLOCK_SIZE) {
-        int numElementsToTraverse = (BLOCK_SIZE <= (d->n - j)) ? BLOCK_SIZE : (d->n - j);
-        for (int i = 0; i < d->k; i++) {
-            for (int k = 0; k < numElementsToTraverse; k++) {
-                sum += d->A[j+k];
-            }
-        }
-    }
-    return sum;
-}
-
-long interchanged_nested_loops_query(struct gen_data *d) {
+long swapped_nested_loops_query(struct gen_data *d) {
     long sum = 0;
     for (int j = 0; j < d->n; j++) {
         for (int i = 0; i < d->k; i++) {
@@ -130,7 +117,7 @@ int main(int argc, char **argv) {
     d = load_data(k, n);
 
     gettimeofday(&start, 0);
-    sum = interchanged_nested_loops_query(&d);
+    sum = swapped_nested_loops_query(&d);
     gettimeofday(&end, 0);
     timersub(&end, &start, &diff);
     printf("Interchanged: %ld.%06ld (result=%ld)\n",
