@@ -14,6 +14,6 @@ rm -f $CBO/q6_cost_plot.pdf
 
 mkdir $RAW
 
-python $CBO/pred_query_test.py > $RAW/q6_cost_raw
-$CBO/scripts/parse-q6-logs -i $RAW/q6_cost_raw -o $RAW/q6CostData
-$CBO/scripts/plot-graph -i $RAW/q6CostData -o $CBO/q6_cost_plot -x Selectivity -y Cost -d $CBO -c 0,1,2,3,4,5
+python $CBO/pred_query_test.py > $RAW/raw.out
+$CBO/scripts/parse-q6-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q6_cost_plot -x Selectivity -y Cost -d $CBO/plots -c 0,1,2,3,4,5

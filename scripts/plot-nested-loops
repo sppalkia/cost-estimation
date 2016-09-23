@@ -14,6 +14,6 @@ rm -f $CBO/nested_loops_plot.pdf
 
 mkdir $RAW
 
-$CBO/nested_loops_bench/test.sh > $RAW/nested_loops_raw
-$CBO/scripts/parse-nested-loops-logs -i $RAW/nested_loops_raw -o $RAW/nestedLoopsData
-$CBO/scripts/plot-graph -i $RAW/nestedLoopsData -o nested_loops_plot -x "Number of array passes" -y "Time (in seconds)" -d $CBO -c 0,1,2,3,4,5
+$CBO/nested_loops_bench/test.sh > $RAW/raw.out
+$CBO/scripts/parse-nested-loops-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o nested_loops_plot -x "Number of array passes" -y "Time (in seconds)" -d $CBO/plots -c 0,1,2,3,4,5

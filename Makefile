@@ -8,4 +8,4 @@ plots:
 	scripts/plot-nested-loops-costs
 
 clean:
-	rm -rf *_raw/ *.pyc *.pdf
+	rm -rf *_raw/ *.pyc *.pdf plots/
