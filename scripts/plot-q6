@@ -10,7 +10,7 @@ fi
 RAW=$CBO/q6_raw
 
 rm -rf $RAW
-rm -f $CBO/q6_plot.pdf 
+rm -f $CBO/plots/q6_plot.pdf
 
 mkdir $RAW
 
