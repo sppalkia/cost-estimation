@@ -7,12 +7,12 @@ fi
 
 
 # The root CBO directory
-RAW=$CBO/q6_raw
+RAW=$CBO/raw/q6
 
 rm -rf $RAW
 rm -f $CBO/plots/q6_plot.pdf
 
-mkdir $RAW
+mkdir -p $RAW
 
 $CBO/q6_bench/test.sh > $RAW/raw.out
 $CBO/scripts/parse-q6-logs -i $RAW/raw.out -o $RAW/processed.out

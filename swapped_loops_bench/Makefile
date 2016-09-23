@@ -5,7 +5,7 @@ EXEC=bench
 .PHONY: all clean
 
 all:
-	${CC} nested_loop_bench.c ${CFLAGS} -o bench
+	${CC} swapped_loops_bench.c ${CFLAGS} -o bench
 
 clean:
 	rm -f ${EXEC}

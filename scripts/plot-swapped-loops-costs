@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$CBO" ]; then
+    echo "Set CBO to root of this repo."
+    exit 1
+fi
+
+
+# The root CBO directory
+RAW=$CBO/raw/swapped_loops_costs
+
+rm -rf $RAW
+rm -f $CBO/plots/swapped_loops_cost_plot.pdf
+
+mkdir -p $RAW
+
+python $CBO/swapped_loops_cost.py > $RAW/raw.out
+$CBO/scripts/parse-swapped-loops-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o swapped_loops_cost_plot -x "Number of array passes" -y Cost -d $CBO/plots -c 0,1,2,3,4,5
