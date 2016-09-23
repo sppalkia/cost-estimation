@@ -31,13 +31,13 @@ def main(inputFile, outputFile):
         if n not in interchangedTimes[k]: interchangedTimes[k][n] = []
       elif "Blocked" in line:
         time = float(line.split()[1])
-        blockedTimes[k][n].append(time / k)
+        blockedTimes[k][n].append(time)
       elif "Unblocked" in line:
         time = float(line.split()[1])
-        unblockedTimes[k][n].append(time / k)
+        unblockedTimes[k][n].append(time)
       elif "Interchanged" in line:
         time = float(line.split()[1])
-        interchangedTimes[k][n].append(time / k)
+        interchangedTimes[k][n].append(time)
 
   # Now, write out parsed data in the format expected by Gnuplot:
   #
@@ -49,18 +49,16 @@ def main(inputFile, outputFile):
   # Every subsequent line is a list of space-delimited numbers (the first
   # number being the row value, and all subsequent values being the corresponding
   # column value
-  ns = list(ns); ns.sort()
+  ks = list(ks); ks.sort()
   with open(outputFile, 'w') as f:
     headerStrs = list()
-    for k in ks:
-      headerStrs.append("k=%d (Blocked)" % k)
-      headerStrs.append("k=%d (Not blocked)" % k)
-      headerStrs.append("k=%d (Interchanged)" % k)
-    f.write("#\t%s\n" % "\t".join(headerStrs))
     for n in ns:
-      f.write("%.2f" % n)
-      for k in ks:
-        f.write(" %.2f" % (sum(blockedTimes[k][n]) / len(blockedTimes[k][n])))
+      headerStrs.append("n=%d (Unblocked)" % n)
+      headerStrs.append("n=%d (Interchanged)" % n)
+    f.write("#\t%s\n" % "\t".join(headerStrs))
+    for k in ks:
+      f.write("%.2f" % k)
+      for n in ns:
         f.write(" %.2f" % (sum(unblockedTimes[k][n]) / len(unblockedTimes[k][n])))
         f.write(" %.2f" % (sum(interchangedTimes[k][n]) / len(interchangedTimes[k][n])))
       f.write("\n")
