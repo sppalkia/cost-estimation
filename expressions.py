@@ -210,7 +210,7 @@ class If(Expr):
 
 class Lookup(Expr):
     # A memory lookup into an array.
-    def __init__(self, vector, index=None):
+    def __init__(self, vector, index):
         self.vector = vector
         # None index means sequential stride in a loop.
         self.index = index

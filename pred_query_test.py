@@ -26,7 +26,7 @@ def get_summed_lookups(n):
     """
     if n == 0:
         return Literal()
-    return Add(Lookup(str(n)), get_summed_lookups(n-1))
+    return Add(Lookup(str(n), Id("i")), get_summed_lookups(n-1))
 
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
@@ -50,12 +50,12 @@ for v in [1, 5]:
     for s in [0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]:
         print "vs={0}, sel={1}".format(v, s)
         lookups = get_summed_lookups(v)
-        condition = GreaterThan(Lookup("0"), Literal())
+        condition = GreaterThan(Lookup("0", Id("i")), Literal())
         branch_expr = If(condition, lookups, Literal())
         branch_expr.selectivity = s
 
-        branched_loop = For(iterations, Id("_"), 1, branch_expr)
-        predicated_expr = For(iterations, Id("_"), 1, Multiply(condition, lookups))
+        branched_loop = For(iterations, Id("i"), 1, branch_expr)
+        predicated_expr = For(iterations, Id("i"), 1, Multiply(condition, lookups))
 
         # Compute and Print Costs
         c = cost(branched_loop, block_sizes, latencies)
