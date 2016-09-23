@@ -19,8 +19,8 @@ in registers.
 Processing cost can also capture instruction-level optimizations such as
 vectorization. For example, if we were to vectorize the above loop to have
 stride 4 (for(V, 4, |x| -> x + (1,1,1,1))), the cost would become len(V) / 4
-since each instruction still only takes one cycle, but 1/4 the number of iterations
-are run.
+since each instruction still only takes one cycle, but 1/4 the number of
+iterations are run.
 
 Memory cost captures the cost of loading values from the memory heirarchy. The
 primary aspect captured in the memory model is prefetching. The model computes,
@@ -73,6 +73,8 @@ def cost(expr, block_sizes, latencies):
         # Compute the cost of L1 access time. All elements do this access.
         # Assume an element on a line is loaded "at once."
         #l1_cost = expr.iters * expr.stride * 4 * latencies[0]
+
+        # TODO check if the lookup is sequential.
 
         # Compute the cost of missing in L1.  This computes the probability of
         # accessing a cache line, and then weights the number of accessed

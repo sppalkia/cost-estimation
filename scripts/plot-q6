@@ -16,4 +16,4 @@ mkdir $RAW
 
 $CBO/q6_bench/test.sh > $RAW/q6_raw
 $CBO/scripts/parse-q6-logs -i $RAW/q6_raw -o $RAW/q6Data
-$CBO/scripts/plot-graph -i $RAW/q6Data -o $CBO/q6_plot -x Selectivity -y Time -d $CBO -c 0,1,2,3,4,5
+$CBO/scripts/plot-graph -i $RAW/q6Data -o $CBO/q6_plot -x Selectivity -y "Time (in seconds)" -d $CBO -c 0,1,2,3,4,5

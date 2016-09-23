@@ -39,7 +39,9 @@ long unblocked_nested_loops_query(struct gen_data *d) {
     long sum = 0;
     for (int i = 0; i < d->k; i++) {
         for (int j = 0; j < d->n; j++) {
-            sum += d->A[j];
+            if (d->A[j] > 50) {
+                sum += d->A[j];
+            }
         }
     }
     return sum;
@@ -62,7 +64,9 @@ long interchanged_nested_loops_query(struct gen_data *d) {
     long sum = 0;
     for (int j = 0; j < d->n; j++) {
         for (int i = 0; i < d->k; i++) {
-            sum += d->A[j];
+            if (d->A[j] > 50) {
+                sum += d->A[j];
+            }
         }
     }
     return sum;
@@ -121,12 +125,9 @@ int main(int argc, char **argv) {
     printf("Unblocked: %ld.%06ld (result=%ld)\n",
             (long) diff.tv_sec, (long) diff.tv_usec, sum);
 
-    gettimeofday(&start, 0);
-    sum = blocked_nested_loops_query(&d);
-    gettimeofday(&end, 0);
-    timersub(&end, &start, &diff);
-    printf("Blocked: %ld.%06ld (result=%ld)\n",
-            (long) diff.tv_sec, (long) diff.tv_usec, sum);
+    // Prevents caching effects.
+    free(d.A);
+    d = load_data(k, n);
 
     gettimeofday(&start, 0);
     sum = interchanged_nested_loops_query(&d);
