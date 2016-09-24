@@ -70,11 +70,12 @@ def cost(expr, block_sizes, latencies):
         #   Constant -- access is sequential?
         #   Random (Unknown/Dynamic -- all access is random)
         num_lookups += (expr.iters * l.p_execute)
+        # TODO Aggregate memory cost per lookup using self.reuse_distance
+        # TODO Pick appropriate parameter values here
     m_cost = ((num_lookups * 4.) / memory_throughput) * clock_frequency # Find cost in terms of number of cycles
 
     # Assume for now that the memory accesses and the processing happen in parallel.
     # (perfect pre-fetching for now).
-    print p_cost, m_cost
     return max(p_cost, m_cost)
 
 def processing_cost(expr):
