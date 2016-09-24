@@ -13,7 +13,9 @@ for j in range(M):
         if A[j] > X:
             sum += A[j]
 
-The cost of the two queries should be equal.
+The cost of the second nested loop construct should be less
+than the cost of the first nested loop construct, on account of
+the more predictable branch.
 
 """
 
