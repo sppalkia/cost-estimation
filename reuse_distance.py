@@ -48,7 +48,6 @@ def reuse_distance(l1, loops):
     # We also need to take into account the size of each access,
     # the block sizes of the caches, etc. This may be done at a higher
     # level.
-    assert isinstance(l1, Lookup)
     l1_idx = l1.index
     dist = 1
     for loop in reversed(loops):
@@ -56,4 +55,4 @@ def reuse_distance(l1, loops):
         if not contains(l1_idx, idx):
             break
         dist *= iters
-    return iterations
+    return dist
