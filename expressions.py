@@ -233,5 +233,6 @@ class Lookup(Expr):
             self.p_execute = ctx["selectivity"]
         else:
             self.p_execute = 1.0
+        self.reuse_distance = reuse_distance(self, ctx["loops"])
 
         return 0.
