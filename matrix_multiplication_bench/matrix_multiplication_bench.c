@@ -1,18 +1,18 @@
 /*
- * A test utility to check how our model captures simple nested loops.
+ * A test utility to check how our model captures simple blocking, which
+ * provides better cache behavior.
  *
  * This test runs the following query:
  *
- *  for i in range(k):
- *      for each element in A:
- *          sum += A[i]
+ *  for i in range(n):
+ *    for j in range(n):
+ *      for k in range(n):
+ *        C[i][j] += (A[i][k] * B[k][j])
  *
  * - n is a configurable parameter.
- * - k, the number of times the entire array is looped over, is also a
- *   configurable parameter.
  *
- * The loop can be run un-changed, or blocked (to make better use of cache
- * locality), or with loop order inverted.
+ * The nested loops above can be run un-changed, or blocked (to make better
+ * use of cache locality). Here, we regard block_size as another parameter.
  *
  * The cost model should provide an ordering equivalent to the performance
  * of the various loops.
@@ -43,7 +43,6 @@ struct gen_data {
 void unblocked_matrix_multiplication(struct gen_data *d) {
     for (int i = 0; i < d->n; i++) {
         for (int j = 0; j < d->n; j++) {
-            d->C[i*d->n + j] = 0;
             for (int k = 0; k < d->n; k++) {
                 d->C[i*d->n + j] += (d->A[i*d->n + k] * d->B[k*d->n + j]);
             }
@@ -52,11 +51,6 @@ void unblocked_matrix_multiplication(struct gen_data *d) {
 }
 
 void blocked_matrix_multiplication(struct gen_data *d) {
-    for (int i = 0; i < d->n; i++) {
-        for (int j = 0; j < d->n; j++) {
-            d->C[i*d->n + j] = 0;
-        }
-    }
     for (int kk = 0; kk < d->n; kk += d->block_size) {
         for (int jj = 0; jj < d->n; jj += d->block_size) {
             for (int i = 0; i < d->n; i++) {
