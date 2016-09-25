@@ -57,7 +57,6 @@ def cost(expr, block_sizes, latencies):
             # (e.g., is it sequential, etc.). This is hacky since we're adding
             # new fields to the object.
             if isinstance(c, Lookup):
-                c.sequential = is_sequential(c, loopIndices)
                 lookups.add(c)
             _get_lookups(c, lookups, loopIndices)
         return lookups
