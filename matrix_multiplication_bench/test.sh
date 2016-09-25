@@ -5,8 +5,11 @@ if [ -z "$CBO" ]; then
     exit 1
 fi  
 
-for it in 1 2 3 4 5; do
-    for n in 128 256 512 1024 2048 3072 4096; do
-        $CBO/matrix_multiplication_bench/bench -n $n
+for it in 1; do
+  for b in 64 128 256; do
+    echo ----- $b -----
+    for n in 128 256 512 1024 2048; do
+        $CBO/matrix_multiplication_bench/bench -n $n -b $b
     done
+  done
 done
