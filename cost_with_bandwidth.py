@@ -43,9 +43,10 @@ def cost(expr, block_sizes, latencies):
     # N times, where N is the number of iterations in the loop. This ignores
     # costs related to the memory heirarchy and assumes all values are loaded
     # into registers.
-    p_cost = processing_cost(expr)
+    p_cost = expr.cost({})
     clock_frequency = (2. * 10**9)
-    memory_throughput = (4. * 10**9)
+    memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
+    cache_sizes = [128000, 512000, 3072000]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -64,19 +65,23 @@ def cost(expr, block_sizes, latencies):
     # Total number of lookups.
     num_lookups = 0
 
+    m_cost = 0
     for l in lookups:
         # TODO strides
         # Strides can be:
         #   Constant -- access is sequential?
         #   Random (Unknown/Dynamic -- all access is random)
-        num_lookups += (expr.iters * l.p_execute)
-        # TODO Aggregate memory cost per lookup using self.reuse_distance
-        # TODO Pick appropriate parameter values here
-    m_cost = ((num_lookups * 4.) / memory_throughput) * clock_frequency # Find cost in terms of number of cycles
+        num_lookups = (l.loops * l.p_execute)
+        mem_lookups = (num_lookups * 4.0)
+        cache_level = len(cache_sizes)
+        for i in xrange(len(cache_sizes)):
+            if cache_sizes[i] > l.reuse_distance:
+                cache_level = i
+                break
+        m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)
 
-    # Assume for now that the memory accesses and the processing happen in parallel.
-    # (perfect pre-fetching for now).
-    return max(p_cost, m_cost)
+    # Add memory and processing cost here.
+    return p_cost + m_cost
 
 def processing_cost(expr):
     # Get the processing cost of an exprssion.
