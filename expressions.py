@@ -134,8 +134,8 @@ class For(Expr):
             ctx["loops"] = []
 
         # Keep a stack of loops so costs can be derived based on loop nesting.
-        ctx["loops"].append((self.iters, self.loopIdx))
-        iterations = self.iters / self.stride
+        iterations = float(self.iters) / self.stride
+        ctx["loops"].append((iterations, self.loopIdx))
         exprCost = self.expr.cost(ctx)
         ctx["loops"].pop()
         return exprCost * iterations
@@ -212,8 +212,10 @@ class Lookup(Expr):
     # A memory lookup into an array.
     def __init__(self, vector, index):
         self.vector = vector
-        # None index means sequential stride in a loop.
-        self.index = index
+        if not isinstance(index, list):
+            self.index = [index]
+        else:
+            self.index = index
 
     def __eq__(self, other):
             return isinstance(other, Lookup) and\
@@ -234,5 +236,7 @@ class Lookup(Expr):
         else:
             self.p_execute = 1.0
         self.reuse_distance = reuse_distance(self, ctx["loops"])
+        iters = [loop[0] for loop in ctx["loops"]]
+        self.loops = reduce(lambda x,y: x*y, iters)
 
         return 0.
