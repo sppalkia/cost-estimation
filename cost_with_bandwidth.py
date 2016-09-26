@@ -75,7 +75,7 @@ def cost(expr, block_sizes, latencies):
         mem_lookups = (num_lookups * 4.0)
         cache_level = len(cache_sizes)
         for i in xrange(len(cache_sizes)):
-            if cache_sizes[i] > l.reuse_distance:
+            if cache_sizes[i] > (l.reuse_distance * 4.0):
                 cache_level = i
                 break
         m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)

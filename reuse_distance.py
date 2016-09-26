@@ -2,6 +2,8 @@
 # loop information.
 
 def contains(lookup_idxs, loop_idx):
+    # Determines if any of the lookup indices (specified by lookup_idxs)
+    # are the same as the passed-in loop index
     for lookup_idx in lookup_idxs:
         if lookup_idx == loop_idx:
             return True
