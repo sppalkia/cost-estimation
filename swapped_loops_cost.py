@@ -40,7 +40,7 @@ for k in [10, 100, 500, 800, 1000]:
     inner_loop = For(n, Id("j"), 1, predicate)
     outer_loop = For(k, Id("i"), 1, inner_loop)
     c = cost(outer_loop, block_sizes, latencies)
-    print_result("Unblocked", c)
+    print_result("Original", c)
 
     # Interchange the loops.
     inner_loop_2 = For(k, Id("i"), 1, predicate)

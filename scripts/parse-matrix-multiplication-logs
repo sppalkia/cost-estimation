@@ -33,6 +33,24 @@ def main(inputFile, outputFile):
         time = float(line.split()[1])
         unblockedTimes[blockSize][n].append(time)
 
+  # Normalize all the data.
+  maximum = 0.0
+  for k in unblockedTimes:
+      for n in unblockedTimes[k]:
+          unblockedTimes[k][n] = [sum(unblockedTimes[k][n]) / len(unblockedTimes[k][n])]
+          maximum = max(maximum, unblockedTimes[k][n][0])
+  for k in blockedTimes:
+      for n in blockedTimes[k]:
+          blockedTimes[k][n] = [sum(blockedTimes[k][n]) / len(blockedTimes[k][n])]
+          maximum = max(maximum, blockedTimes[k][n][0])
+
+  for k in unblockedTimes:
+      for n in unblockedTimes[k]:
+          unblockedTimes[k][n] = [x / float(maximum) for x in unblockedTimes[k][n]]
+  for k in blockedTimes:
+      for n in blockedTimes[k]:
+          blockedTimes[k][n] = [x / float(maximum) for x in blockedTimes[k][n]]
+
   # Now, write out parsed data in the format expected by Gnuplot:
   #
   # #	<Col1 Name>	<Col2 Name> ...

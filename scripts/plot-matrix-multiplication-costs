@@ -16,4 +16,4 @@ mkdir -p $RAW
 
 python $CBO/matrix_multiplication_cost.py > $RAW/raw.out
 $CBO/scripts/parse-matrix-multiplication-logs -i $RAW/raw.out -o $RAW/processed.out
-$CBO/scripts/plot-graph -i $RAW/processed.out -o matrix_multiplication_cost_plot -x "Dimension of matrix" -y Cost -d $CBO/plots -c 0,1,2,3,4,5
+$CBO/scripts/plot-graph -i $RAW/processed.out -o matrix_multiplication_cost_plot -x "Dimension of matrix" -y "Normalized cost" -d $CBO/plots -c 0,1,2,3,4,5

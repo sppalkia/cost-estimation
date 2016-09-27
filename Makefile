@@ -4,7 +4,7 @@
 benchmark-plots:
 	scripts/plot-q6
 	scripts/plot-swapped-loops
-	# scripts/plot-matrix-multiplication
+	scripts/plot-matrix-multiplication
 
 cost-plots:
 	scripts/plot-q6-costs

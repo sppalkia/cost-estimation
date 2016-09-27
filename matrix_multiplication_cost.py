@@ -28,7 +28,7 @@ block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
-for b in [64, 128, 256]:
+for b in [128]:
   print "----- {0} -----".format(b)
   for n in [128, 256, 512, 1024, 2048]:
     print "n={0}, block_size={1}".format(n, b)
