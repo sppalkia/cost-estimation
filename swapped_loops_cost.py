@@ -25,9 +25,9 @@ block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
-for k in [10, 100, 1000]:
+for k in [10, 100, 500, 800, 1000]:
   print "----- {0} -----".format(k)
-  for n in [10000, 20000, 30000, 40000, 50000, 100000]:
+  for n in [10000]:
     print "k={0}, n={1}".format(k, n)
 
     # Predicate definition. Always use index j for array lookups in the predicate.

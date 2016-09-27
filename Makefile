@@ -8,4 +8,4 @@ plots:
 	scripts/plot-swapped-loops-costs
 
 clean:
-	rm -rf raw/ *.pyc *.pdf plots/
+	rm -rf *_raw/ *.pyc *.pdf plots/

@@ -32,6 +32,25 @@ def main(inputFile, outputFile):
         time = float(line.split()[2])
         noBranchedTimes[vs][sel].append(time)
 
+  # Normalize all the data.
+  maximum = 0.0
+  for vs in branchedTimes:
+      for sel in branchedTimes[vs]:
+          branchedTimes[vs][sel] = [sum(branchedTimes[vs][sel]) / len(branchedTimes[vs][sel])]
+          maximum = max(maximum, branchedTimes[vs][sel][0])
+  for vs in noBranchedTimes:
+      for sel in noBranchedTimes[vs]:
+          noBranchedTimes[vs][sel] = [sum(noBranchedTimes[vs][sel]) / len(noBranchedTimes[vs][sel])]
+          maximum = max(maximum, noBranchedTimes[vs][sel][0])
+
+  for vs in branchedTimes:
+      for sel in branchedTimes[vs]:
+          branchedTimes[vs][sel] = [x / float(maximum) for x in branchedTimes[vs][sel]]
+  for vs in noBranchedTimes:
+      for sel in noBranchedTimes[vs]:
+          noBranchedTimes[vs][sel] = [x / float(maximum) for x in noBranchedTimes[vs][sel]]
+
+
   # Now, write out parsed data in the format expected by Gnuplot:
   #
   # #	<Col1 Name>	<Col2 Name> ...
