@@ -19,7 +19,7 @@ evaluate to true or false), the first loop should have lower cost
 """
 
 from expressions import *
-from cost import *
+from cost_with_bandwidth import *
 
 block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
 
