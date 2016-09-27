@@ -46,7 +46,7 @@ def cost(expr, block_sizes, latencies):
     p_cost = expr.cost({})
     clock_frequency = (2. * 10**9)
     memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
-    cache_sizes = [128000, 512000, 3072000]
+    cache_sizes = [2000, 8000, 48000]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -74,8 +74,9 @@ def cost(expr, block_sizes, latencies):
         num_lookups = (l.loops * l.p_execute)
         mem_lookups = (num_lookups * 4.0)
         cache_level = len(cache_sizes)
+        l_reuse_distance = reuse_distance(l, lookups, l.loops_seq)
         for i in xrange(len(cache_sizes)):
-            if cache_sizes[i] > (l.reuse_distance * 4.0):
+            if cache_sizes[i] > l_reuse_distance:
                 cache_level = i
                 break
         m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)

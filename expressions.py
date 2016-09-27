@@ -235,7 +235,9 @@ class Lookup(Expr):
             self.p_execute = ctx["selectivity"]
         else:
             self.p_execute = 1.0
-        self.reuse_distance = reuse_distance(self, ctx["loops"])
+        self.loops_seq = []
+        for loop in ctx["loops"]:
+            self.loops_seq.append(loop)
         iters = [loop[0] for loop in ctx["loops"]]
         self.loops = reduce(lambda x,y: x*y, iters)
 
