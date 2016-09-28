@@ -50,7 +50,6 @@ def main(inputFile, outputFile):
       for sel in noBranchedTimes[vs]:
           noBranchedTimes[vs][sel] = [x / float(maximum) for x in noBranchedTimes[vs][sel]]
 
-
   # Now, write out parsed data in the format expected by Gnuplot:
   #
   # #	<Col1 Name>	<Col2 Name> ...

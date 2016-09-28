@@ -16,4 +16,4 @@ mkdir -p $RAW
 
 python $CBO/q6_cost.py > $RAW/raw.out
 $CBO/scripts/parse-q6-logs -i $RAW/raw.out -o $RAW/processed.out
-$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q6_cost_plot -x Selectivity -y Cost -d $CBO/plots -c 0,1,2,3,4,5
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q6_cost_plot -x Selectivity -y "Normalized cost" -d $CBO/plots -c 0,1,2,3,4,5

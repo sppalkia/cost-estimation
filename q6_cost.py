@@ -1,15 +1,25 @@
 """
-Tests costs of the following simple query:
+Tests costs of the following loops:
 
 for(V0...Vn+1):
     if V0[i] > X:
         V1[i] + V2[i] + ... + Vn[i] + 0
     else:
         0
+
+and
+
+for(V0...Vn+1):
+    (V0[i] > X) * (V1[i] + V2[i] + ... + Vn[i] + 0)
+
+The cost of the second loop in general should be less than the
+cost of the first loop for "less-predictable" branches. For
+"more-predictable" branches (i.e., branches that almost always
+evaluate to true or false), the first loop should have lower cost
 """
 
 from expressions import *
-from cost import *
+from cost_with_bandwidth import *
 
 block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
 
@@ -30,20 +40,6 @@ def get_summed_lookups(n):
 
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
-
-
-"""
-The Branched Loop:
-        for(V0...Vn+1):
-            if V0[i] > X:
-                V1[i] + V2[i] + ... + Vn[i] + 0
-            else:
-                0
-
-The Scalar Predicatd Loop:
-        for(V0...Vn+1):
-            (V0[i] > X) * (V1[i] + V2[i] + ... + Vn[i] + 0)
-"""
 
 for v in [1, 5]:
     print "----- {0} -----".format(v)

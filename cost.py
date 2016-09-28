@@ -107,11 +107,6 @@ def cost(expr, block_sizes, latencies):
         # TODO probably an overestimate.
         reg_cost = (expr.iters * 4 * expr.stride / 8) * l.p_execute
 
-        #print l1_cost
-        #print l2_cost
-        #print reg_cost
-        #print l.p_execute
-
         lookup_costs.append(l1_cost + l3_rnd_cost + reg_cost)
         l3_seq_costs.append(l3_seq_cost)
 
@@ -126,10 +121,6 @@ def cost(expr, block_sizes, latencies):
     # is masked by the prefetcher by "overlapping" it with the L1/L2
     # load costs and the processing cost.
     l3_cost = max(0.0, highest_l3_cost - (p_cost + mem_cost))
-
-    #print "Processing:" + str(p_cost)
-    #print "Memory Access:" + str(mem_cost)
-    #print "L3 Access:" + str(l3_cost)
 
     # Return the sum of all the costs.
     return l3_cost + p_cost + mem_cost
@@ -150,7 +141,7 @@ def is_sequential(lookup, indices):
     if lookup is None:
         return True
 
-    index = lookup.index
+    index = lookup.index[-1]
     def contains(node, f):
         if f == node:
             return True

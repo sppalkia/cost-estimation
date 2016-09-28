@@ -8,7 +8,7 @@ import argparse
 def main(inputFile, outputFile):
   # First, read the raw log from the ./test.sh script and parse out
   # times and input parameters
-  unblockedTimes = dict()
+  originalTimes = dict()
   interchangedTimes = dict()
   ns = set()
   ks = set()
@@ -22,31 +22,31 @@ def main(inputFile, outputFile):
         ns.add(n)
         ks.add(k)
 
-        if k not in unblockedTimes: unblockedTimes[k] = dict()
+        if k not in originalTimes: originalTimes[k] = dict()
         if k not in interchangedTimes: interchangedTimes[k] = dict()
-        if n not in unblockedTimes[k]: unblockedTimes[k][n] = []
+        if n not in originalTimes[k]: originalTimes[k][n] = []
         if n not in interchangedTimes[k]: interchangedTimes[k][n] = []
-      elif "Unblocked" in line:
+      elif "Original" in line:
         time = float(line.split()[1])
-        unblockedTimes[k][n].append(time)
+        originalTimes[k][n].append(time)
       elif "Interchanged" in line:
         time = float(line.split()[1])
         interchangedTimes[k][n].append(time)
 
-  # Average, and then normalize the data.
+  # Normalize all the data.
   maximum = 0.0
-  for k in unblockedTimes:
-      for n in unblockedTimes[k]:
-          unblockedTimes[k][n] = [sum(unblockedTimes[k][n]) / len(unblockedTimes[k][n])]
-          maximum = max(maximum, unblockedTimes[k][n][0])
+  for k in originalTimes:
+      for n in originalTimes[k]:
+          originalTimes[k][n] = [sum(originalTimes[k][n]) / len(originalTimes[k][n])]
+          maximum = max(maximum, originalTimes[k][n][0])
   for k in interchangedTimes:
       for n in interchangedTimes[k]:
           interchangedTimes[k][n] = [sum(interchangedTimes[k][n]) / len(interchangedTimes[k][n])]
           maximum = max(maximum, interchangedTimes[k][n][0])
 
-  for k in unblockedTimes:
-      for n in unblockedTimes[k]:
-          unblockedTimes[k][n] = [x / float(maximum) for x in unblockedTimes[k][n]]
+  for k in originalTimes:
+      for n in originalTimes[k]:
+          originalTimes[k][n] = [x / float(maximum) for x in originalTimes[k][n]]
   for k in interchangedTimes:
       for n in interchangedTimes[k]:
           interchangedTimes[k][n] = [x / float(maximum) for x in interchangedTimes[k][n]]
@@ -65,13 +65,13 @@ def main(inputFile, outputFile):
   with open(outputFile, 'w') as f:
     headerStrs = list()
     for n in ns:
-      headerStrs.append("n=%d (Unblocked)" % n)
+      headerStrs.append("n=%d (Original)" % n)
       headerStrs.append("n=%d (Interchanged)" % n)
     f.write("#\t%s\n" % "\t".join(headerStrs))
     for k in ks:
       f.write("%.2f" % k)
       for n in ns:
-        f.write(" %.2f" % (sum(unblockedTimes[k][n]) / len(unblockedTimes[k][n])))
+        f.write(" %.2f" % (sum(originalTimes[k][n]) / len(originalTimes[k][n])))
         f.write(" %.2f" % (sum(interchangedTimes[k][n]) / len(interchangedTimes[k][n])))
       f.write("\n")
 

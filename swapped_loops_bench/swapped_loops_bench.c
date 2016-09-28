@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     sum = unblocked_nested_loops_query(&d);
     gettimeofday(&end, 0);
     timersub(&end, &start, &diff);
-    printf("Unblocked: %ld.%06ld (result=%ld)\n",
+    printf("Original: %ld.%06ld (result=%ld)\n",
             (long) diff.tv_sec, (long) diff.tv_usec, sum);
 
     // Prevents caching effects.
