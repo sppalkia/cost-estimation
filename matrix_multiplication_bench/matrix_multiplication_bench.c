@@ -50,6 +50,16 @@ void unblocked_matrix_multiplication(struct gen_data *d) {
     }
 }
 
+void transposed_matrix_multiplication(struct gen_data *d) {
+    for (int i = 0; i < d->n; i++) {
+        for (int j = 0; j < d->n; j++) {
+            for (int k = 0; k < d->n; k++) {
+                d->C[i*d->n + j] += (d->A[i*d->n + k] * d->B[j*d->n + k]);
+            }
+        }
+    }
+}
+
 void blocked_matrix_multiplication(struct gen_data *d) {
     for (int kk = 0; kk < d->n; kk += d->block_size) {
         for (int jj = 0; jj < d->n; jj += d->block_size) {
@@ -122,6 +132,18 @@ int main(int argc, char **argv) {
     struct gen_data d = load_data(n, block_size);
     long sum;
     struct timeval start, end, diff;
+
+    gettimeofday(&start, 0);
+    transposed_matrix_multiplication(&d);
+    gettimeofday(&end, 0);
+    sum = compute_sum(&d);
+    timersub(&end, &start, &diff);
+    printf("Transposed: %ld.%06ld (result=%ld)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
+    // Prevents caching effects.
+    free(d.A);
+    d = load_data(n, block_size);
 
     gettimeofday(&start, 0);
     unblocked_matrix_multiplication(&d);

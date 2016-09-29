@@ -10,6 +10,8 @@ def main(inputFile, outputFile):
   # times and input parameters
   blockedTimes = dict()
   unblockedTimes = dict()
+  transposedTimes = dict()
+
   ns = set()
   blockSizes = set()
   with open(inputFile, 'r') as f:
@@ -24,14 +26,19 @@ def main(inputFile, outputFile):
 
         if blockSize not in blockedTimes: blockedTimes[blockSize] = dict()
         if blockSize not in unblockedTimes: unblockedTimes[blockSize] = dict()
+        if blockSize not in transposedTimes: transposedTimes[blockSize] = dict()
         if n not in blockedTimes[blockSize]: blockedTimes[blockSize][n] = []
         if n not in unblockedTimes[blockSize]: unblockedTimes[blockSize][n] = []
+        if n not in transposedTimes[blockSize]: transposedTimes[blockSize][n] = []
       elif "Blocked" in line:
         time = float(line.split()[1])
         blockedTimes[blockSize][n].append(time)
       elif "Unblocked" in line:
         time = float(line.split()[1])
         unblockedTimes[blockSize][n].append(time)
+      elif "Transposed" in line:
+        time = float(line.split()[1])
+        transposedTimes[blockSize][n].append(time)
 
   # Normalize all the data.
   maximum = 0.0
@@ -43,6 +50,10 @@ def main(inputFile, outputFile):
       for n in blockedTimes[k]:
           blockedTimes[k][n] = [sum(blockedTimes[k][n]) / len(blockedTimes[k][n])]
           maximum = max(maximum, blockedTimes[k][n][0])
+  for k in blockedTimes:
+      for n in transposedTimes[k]:
+          transposedTimes[k][n] = [sum(transposedTimes[k][n]) / len(transposedTimes[k][n])]
+          maximum = max(maximum, transposedTimes[k][n][0])
 
   for k in unblockedTimes:
       for n in unblockedTimes[k]:
@@ -50,6 +61,9 @@ def main(inputFile, outputFile):
   for k in blockedTimes:
       for n in blockedTimes[k]:
           blockedTimes[k][n] = [x / float(maximum) for x in blockedTimes[k][n]]
+  for k in transposedTimes:
+      for n in transposedTimes[k]:
+          transposedTimes[k][n] = [x / float(maximum) for x in transposedTimes[k][n]]
 
   # Now, write out parsed data in the format expected by Gnuplot:
   #
@@ -67,12 +81,14 @@ def main(inputFile, outputFile):
     for blockSize in blockSizes:
       headerStrs.append("blockSize=%d (Unblocked)" % blockSize)
       headerStrs.append("blockSize=%d (Blocked)" % blockSize)
+      headerStrs.append("blockSize=%d (Transposed)" % blockSize)
     f.write("#\t%s\n" % "\t".join(headerStrs))
     for n in ns:
       f.write("%.2f" % n)
       for blockSize in blockSizes:
         f.write(" %.2f" % (sum(unblockedTimes[blockSize][n]) / len(unblockedTimes[blockSize][n])))
         f.write(" %.2f" % (sum(blockedTimes[blockSize][n]) / len(blockedTimes[blockSize][n])))
+        f.write(" %.2f" % (sum(transposedTimes[blockSize][n]) / len(transposedTimes[blockSize][n])))
       f.write("\n")
 
 

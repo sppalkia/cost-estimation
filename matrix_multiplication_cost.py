@@ -33,7 +33,15 @@ for b in [128]:
   for n in [128, 256, 512, 1024, 2048]:
     print "n={0}, block_size={1}".format(n, b)
 
-    # TODO: Loop indices not quite right here.
+    # Loop 0 (transposed).
+    k_loop = For(n, Id("k"), 1, Add(Lookup("C", [Id("i"), Id("j")]),
+                                    Multiply(Lookup("A", [Id("i"), Id("k")]),
+                                             Lookup("B", [Id("j"), Id("k")]))))
+    j_loop = For(n, Id("j"), 1, k_loop)
+    i_loop = For(n, Id("i"), 1, j_loop)
+    c = cost(i_loop, block_sizes, latencies)
+    print_result("Transposed", c)
+
     # Loop 1 (unblocked).
     k_loop = For(n, Id("k"), 1, Add(Lookup("C", [Id("i"), Id("j")]),
                                     Multiply(Lookup("A", [Id("i"), Id("k")]),
