@@ -46,7 +46,7 @@ def cost(expr, block_sizes, latencies):
     p_cost = expr.cost({})
     clock_frequency = (2. * 10**9)
     memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
-    cache_sizes = [2048, 8192, 49152]
+    cache_sizes = [500, 4000, 62500]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -92,15 +92,19 @@ def cost(expr, block_sizes, latencies):
             for i in xrange(len(block_sizes)):
                 # Number of blocks in the vector.
                 blocks = vector_size / block_sizes[i]
-                cache_size_in_blocks = cache_sizes[i] / block_sizes[i]
+                cache_size_in_blocks = cache_sizes[i]
                 p = cache_size_in_blocks / blocks
-                p = min(1.0, max(p, 0.0))
+                if p < 0.0:
+                    p = 0.0
+                if p > 1.0:
+                    p = 1.0
+                old_p = p
                 p -= prev_p
-                prev_p = p
+                prev_p += p
 
-                print i,p
+                print i,old_p,p
                 rand_cost += p * latencies[i]
-                if p == 1.0:
+                if old_p == 1.0:
                     break
 
             if prev_p != 1.0:
