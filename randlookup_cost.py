@@ -1,7 +1,7 @@
 from expressions import *
 from cost_with_bandwidth import *
 
-block_sizes, latencies = [64, 64, 64], [1, 3, 45, 100]
+block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
 
 def print_result(name, value):
     print "{0}: {1}".format(name, value)

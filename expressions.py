@@ -292,6 +292,11 @@ class Lookup(Expr):
                         if not is_sequential(c, indicies):
                             return False
                     return True
+
+            # This is the "base case"
+            if isinstance(index, Id):
+                return True
+
             return False
 
         # Memory access costs determined separately.

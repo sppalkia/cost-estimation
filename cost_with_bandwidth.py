@@ -32,8 +32,9 @@ TODO : Multi-core.
 from expressions import *
 from extended_cost_model import *
 
-def cost(expr, block_sizes, latencies):
+def cost(expr, block_sizes=[], latencies=[]):
     # Return the cost of an expression.
+    # block_sizes and latencies parameters unused.
 
     # Only consider costs of loops.
     if not isinstance(expr, For):
@@ -47,6 +48,8 @@ def cost(expr, block_sizes, latencies):
     clock_frequency = (2. * 10**9)
     memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
     cache_sizes = [500, 4000, 62500]
+    block_sizes = [64, 64, 64]
+    latencies = [1, 7, 45, 100]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -110,11 +113,10 @@ def cost(expr, block_sizes, latencies):
             if prev_p != 1.0:
                 p = 1.0 - prev_p
                 rand_cost += p * latencies[-1]
-
-        m_cost += (num_lookups * rand_cost)
+            m_cost += (num_lookups * rand_cost)
 
     # Add memory and processing cost here.
-    return m_cost
+    return p_cost + m_cost
 
 def processing_cost(expr):
     # Get the processing cost of an exprssion.
