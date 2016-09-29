@@ -1,6 +1,9 @@
 # Computes reuse distances between two memory locations given
 # loop information.
 
+# TODO get this from the AST.
+ELEM_SIZE = 4.0
+
 def contains(lookup_idxs, loop_idx):
     # Determines if any of the lookup indices (specified by lookup_idxs)
     # are the same as the passed-in loop index
@@ -56,9 +59,8 @@ def reuse_distance_helper(lookup_idxs, loops, should_break=True):
         if seen_loop_idx == lookup_idxs[-1]:
             is_sequential = True
     if is_sequential:
-        dist = int(dist / 16) + 1  # Each element is 4 bytes (integer) and each cache block
-                                   # is 64 bytes. Add 1 since int() rounds down.
-                                   # TODO variable element sizes.
+        dist = int(dist * ELEM_SIZE / 64) + 1   # Each element is 4 bytes (integer) and each cache block
+                                                # is 64 bytes. Add 1 since int() rounds down.
     else:
         dist = int(dist)
     return dist, seen_loops
