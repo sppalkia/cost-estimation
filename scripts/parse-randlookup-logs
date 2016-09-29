@@ -27,6 +27,17 @@ def main(inputFile, outputFile):
         time = float(line.split()[1])
         queryTimes[k][n].append(time)
 
+  # Normalize all the data.
+  maximum = 0.0
+  for k in queryTimes:
+      for n in queryTimes[k]:
+          queryTimes[k][n] = [sum(queryTimes[k][n]) / len(queryTimes[k][n])]
+          maximum = max(maximum, queryTimes[k][n][0])
+
+  for k in queryTimes:
+      for n in queryTimes[k]:
+          queryTimes[k][n] = [x / float(maximum) for x in queryTimes[k][n]]
+
   # Now, write out parsed data in the format expected by Gnuplot:
   #
   # #	<Col1 Name>	<Col2 Name> ...

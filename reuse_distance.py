@@ -58,6 +58,7 @@ def reuse_distance_helper(lookup_idxs, loops, should_break=True):
     if is_sequential:
         dist = int(dist / 16) + 1  # Each element is 4 bytes (integer) and each cache block
                                    # is 64 bytes. Add 1 since int() rounds down.
+                                   # TODO variable element sizes.
     else:
         dist = int(dist)
     return dist, seen_loops

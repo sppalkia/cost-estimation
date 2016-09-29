@@ -21,7 +21,7 @@ void run_query(struct gen_data *d) {
     const int n = d->n;
     const int k = d->k;
     for (int i = 0; i < n; i++) {
-        int index = d->A[i] % k;
+        int index = d->A[i];
         d->R[index]++;
     }
 }
@@ -37,9 +37,8 @@ struct gen_data load_data(size_t k, size_t n) {
     d.A = (int *)malloc(sizeof(int) * n);
     d.R = (int *)malloc(sizeof(int) * k);
     for (int i = 0; i < n; i++) {
-        d.A[i] = random();
+        d.A[i] = random() % k;
     }
-    memset(d.R, 0, sizeof(int) * k);
     return d;
 }
 
@@ -73,7 +72,7 @@ int main(int argc, char **argv) {
     printf("k=%d, n=%d\n", k, n); 
 
     struct gen_data d = load_data(k, n);
-    long sum;
+    run_query(&d);
 
     struct timeval start, end, diff;
 
@@ -81,7 +80,7 @@ int main(int argc, char **argv) {
     run_query(&d);
     gettimeofday(&end, 0);
     timersub(&end, &start, &diff);
-    //printf("Result: %ld.%06ld (result=%d)\n", (long) diff.tv_sec, (long) diff.tv_usec, d.R[0]);
+    printf("Result: %ld.%06ld (result=%d)\n", (long) diff.tv_sec, (long) diff.tv_usec, d.R[0]);
 
     return 0;
 }

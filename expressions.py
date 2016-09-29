@@ -102,6 +102,9 @@ class Multiply(BinaryExpr):
 class Divide(BinaryExpr):
     def __str__(self):
         return str(self.left) + "/" + str(self.right)
+class Mod(BinaryExpr):
+    def __str__(self):
+        return str(self.left) + "%" + str(self.right)
 
 class For(Expr):
     # A for loop.
@@ -208,14 +211,32 @@ class If(Expr):
                 str(self.true),
                 str(self.false))
 
+class Vector(Expr):
+    def __init__(self, name, length):
+        self.name = name
+        self.length = length
+
+    def cost(self, ctx):
+        # TODO
+        return 0
+
+    def __str__(self):
+        return "vec({0},{1})".format(self.name, self.length)
+
 class Lookup(Expr):
     # A memory lookup into an array.
     def __init__(self, vector, index):
-        self.vector = vector
+
+        if isinstance(vector, str):
+            self.vector = Vector(vector, 0)
+        else:
+            self.vector = vector
+
         if not isinstance(index, list):
             self.index = [index]
         else:
             self.index = index
+        self.sequential = False
 
     def __eq__(self, other):
             return isinstance(other, Lookup) and\
@@ -223,13 +244,56 @@ class Lookup(Expr):
                     self.index == other.index
 
     def __hash__(self):
-        return hash(self.vector + str(self.index))
+        return hash(str(self.vector) + str(self.index))
 
     def __str__(self):
         return "lookup({0},{1})".format(str(self.vector),
                 str(self.index) if self.index is not None else "i")
 
     def cost(self, ctx):
+        # Sets annotations on a lookup node; doesn't perform any cost calculation.
+
+        def is_sequential(lookup, indices):
+            # given a lookup expression and an ordered list of loop
+            # indices (ordered by nesting), returns whether an access pattern
+            # is sequential.
+            #
+            # Caveat: Only consider simple arithmetic computations right now
+            # (i.e., only Add, Subtract, Multiply and Divide Expr nodes are allowed in the
+            # index computation).
+            #
+            # TODO this should later be augmented to return the "distance" of
+            # reuse between two accesses (e.g. A[j][i] has a reuse distance of len(j))
+
+            def contains(node, f):
+                if f == node:
+                    return True
+                for c in node.children():
+                    if contains(c, f):
+                        return True
+                return False
+
+            # None lookup nodes designate implicit sequential access.
+            if lookup is None:
+                return True
+            index = lookup.index[-1]
+
+            # If the last loop index is accessed non-sequentially, the access is
+            # not sequential.
+            if isinstance(index, Multiply) or isinstance(index, Divide):
+                if contains(index, indices[-1]):
+                    return False
+
+            # Don't support complex expressions for now.
+            # TODO this needs to be slightly more complex (e.g. Mods are special).
+            if isinstance(index, BinaryExpr):
+                if isinstance(index, Add) or isinstance(index, Subtract):
+                    for c in index.children():
+                        if not is_sequential(c, indicies):
+                            return False
+                    return True
+            return False
+
         # Memory access costs determined separately.
         if "selectivity" in ctx:
             self.p_execute = ctx["selectivity"]
@@ -238,7 +302,11 @@ class Lookup(Expr):
         self.loops_seq = []
         for loop in ctx["loops"]:
             self.loops_seq.append(loop)
+
         iters = [loop[0] for loop in ctx["loops"]]
         self.loops = reduce(lambda x,y: x*y, iters)
+
+        idxes = [loop[1] for loop in ctx["loops"]]
+        self.sequential = is_sequential(self, idxes)
 
         return 0.

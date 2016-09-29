@@ -46,7 +46,7 @@ def cost(expr, block_sizes, latencies):
     p_cost = expr.cost({})
     clock_frequency = (2. * 10**9)
     memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
-    cache_sizes = [2000, 8000, 48000]
+    cache_sizes = [2048, 8192, 49152]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -67,22 +67,50 @@ def cost(expr, block_sizes, latencies):
 
     m_cost = 0
     for l in lookups:
-        # TODO strides
-        # Strides can be:
-        #   Constant -- access is sequential?
-        #   Random (Unknown/Dynamic -- all access is random)
         num_lookups = (l.loops * l.p_execute)
-        mem_lookups = (num_lookups * 4.0)
-        cache_level = len(cache_sizes)
         l_reuse_distance = reuse_distance(l, lookups, l.loops_seq)
-        for i in xrange(len(cache_sizes)):
-            if cache_sizes[i] > l_reuse_distance:
-                cache_level = i
-                break
-        m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)
+
+        # TODO do we still need this?
+        if not l.sequential:
+            vector_size = l.vector.length * 4.0
+            l_reuse_distance += (vector_size / block_sizes[0])
+
+        if l.sequential:
+            # Sequential access - use bandwidth.
+            cache_level = len(cache_sizes)
+            for i in xrange(len(cache_sizes)):
+                if cache_sizes[i] > l_reuse_distance:
+                    cache_level = i
+                    break
+            mem_lookups = (num_lookups * 4.0)
+            m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)
+        else:
+            # Random access - use latency.
+            rand_cost = 0.0
+            vector_size = l.vector.length * 4.0
+            prev_p = 0.0
+            for i in xrange(len(block_sizes)):
+                # Number of blocks in the vector.
+                blocks = vector_size / block_sizes[i]
+                cache_size_in_blocks = cache_sizes[i] / block_sizes[i]
+                p = cache_size_in_blocks / blocks
+                p = min(1.0, max(p, 0.0))
+                p -= prev_p
+                prev_p = p
+
+                print i,p
+                rand_cost += p * latencies[i]
+                if p == 1.0:
+                    break
+
+            if prev_p != 1.0:
+                p = 1.0 - prev_p
+                rand_cost += p * latencies[-1]
+
+        m_cost += (num_lookups * rand_cost)
 
     # Add memory and processing cost here.
-    return p_cost + m_cost
+    return m_cost
 
 def processing_cost(expr):
     # Get the processing cost of an exprssion.

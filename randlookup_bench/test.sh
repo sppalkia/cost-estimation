@@ -6,7 +6,7 @@ if [ -z "$CBO" ]; then
 fi  
 
 for _ in {1..5}; do
-    for k in 100 10000 100000 1000000 10000000 100000000 1000000000; do
+    for k in 100 10000 100000 1000000 10000000 100000000; do
         echo ----- $k -----
         $CBO/randlookup_bench/bench -k $k
     done
