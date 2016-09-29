@@ -14,4 +14,4 @@ cost-plots:
 all-plots: benchmark-plots cost-plots
 
 clean:
-	rm -rf *_raw/ *.pyc *.pdf plots/
+	rm -rf raw/ *.pyc *.pdf plots/
