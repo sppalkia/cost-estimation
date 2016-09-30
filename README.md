@@ -10,3 +10,7 @@ $ export CBO=`pwd`
 ```
 
 Or do it in your `.rc` file.
+
+### Generating plots
+
+To generate all plots, run `make` in this directory.

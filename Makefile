@@ -1,7 +1,15 @@
 
-.PHONY: benchmark-plots cost-plots all-plots clean
+.PHONY: make-benchmarks benchmark-plots cost-plots all-plots clean
 
-benchmark-plots:
+all: benchmark-plots cost-plots
+
+make-benchmarks:
+	make --directory q6_bench
+	make --directory swapped_loops_bench
+	make --directory matrix_multiplication_bench
+	make --directory randlookup_bench
+
+benchmark-plots: make-benchmarks
 	scripts/plot-q6
 	scripts/plot-swapped-loops
 	scripts/plot-matrix-multiplication
@@ -11,8 +19,13 @@ cost-plots:
 	scripts/plot-q6-costs
 	scripts/plot-swapped-loops-costs
 	scripts/plot-matrix-multiplication-costs
+	scripts/plot-randlookup-costs
 
 all-plots: benchmark-plots cost-plots
 
 clean:
+	make clean --directory q6_bench
+	make clean --directory swapped_loops_bench
+	make clean --directory matrix_multiplication_bench
+	make clean --directory randlookup_bench
 	rm -rf raw/ *.pyc *.pdf plots/
