@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$CBO" ]; then
+    echo "Set CBO to root of this repo."
+    exit 1
+fi
+
+
+# The root CBO directory
+RAW=$CBO/raw/randlookup_costs
+
+rm -rf $RAW
+rm -f $CBO/plots/randlookup_cost_plot.pdf
+
+mkdir -p $RAW
+
+python $CBO/randlookup_cost.py > $RAW/raw.out
+$CBO/scripts/parse-randlookup-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o randlookup_cost_plot -x "Hash Table Size" -y "Normalized cost" -d $CBO/plots -c 0,1,2,3,4,5 -l

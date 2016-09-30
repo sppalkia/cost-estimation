@@ -32,8 +32,12 @@ TODO : Multi-core.
 from expressions import *
 from extended_cost_model import *
 
-def cost(expr, block_sizes, latencies):
+# TODO this should be a paramter in the AST.
+ELEM_SIZE = 4.0
+
+def cost(expr, block_sizes=[], latencies=[]):
     # Return the cost of an expression.
+    # block_sizes and latencies parameters unused.
 
     # Only consider costs of loops.
     if not isinstance(expr, For):
@@ -44,17 +48,22 @@ def cost(expr, block_sizes, latencies):
     # costs related to the memory heirarchy and assumes all values are loaded
     # into registers.
     p_cost = expr.cost({})
+
+    # CPU clock frequency.
     clock_frequency = (2. * 10**9)
+
+    # Memory throughput at different levels of the heirarchy (index 0 is L1 cache, etc.).
     memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
-    cache_sizes = [2000, 8000, 48000]
+    # Cache sizes in terms of blocks (cache size at level i in bytes = cache_size[i] * block_sizes[i]).
+    cache_sizes = [500, 4000, 62500]
+    # Cache block (line) size at different levels of the memory heirarchy.
+    block_sizes = [64, 64, 64]
+    # Memory access latencies at different levels of the memory heirarchy.
+    latencies = [1, 7, 45, 100]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
         for c in expr.children():
-            # TODO need to associate each lookup with a access probability.
-            # TODO how what kind of lookup is it? Is it sequential? What's
-            # the stride? If the selectivity is non-zero and the stride
-            # isn't zero, how do we handle this?
             if isinstance(c, Lookup):
                 lookups.add(c)
             _get_lookups(c, lookups)
@@ -62,31 +71,44 @@ def cost(expr, block_sizes, latencies):
 
     # The list of lookups.
     lookups = list(_get_lookups(expr))
-    # Total number of lookups.
-    num_lookups = 0
-
     m_cost = 0
+
     for l in lookups:
-        # TODO strides
-        # Strides can be:
-        #   Constant -- access is sequential?
-        #   Random (Unknown/Dynamic -- all access is random)
         num_lookups = (l.loops * l.p_execute)
-        mem_lookups = (num_lookups * 4.0)
-        cache_level = len(cache_sizes)
         l_reuse_distance = reuse_distance(l, lookups, l.loops_seq)
-        for i in xrange(len(cache_sizes)):
-            if cache_sizes[i] > l_reuse_distance:
-                cache_level = i
-                break
-        m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)
+
+        if l.sequential:
+            # Sequential access - use bandwidth.
+            cache_level = len(cache_sizes)
+            for i in xrange(len(cache_sizes)):
+                if cache_sizes[i] > l_reuse_distance:
+                    cache_level = i
+                    break
+            mem_lookups = (num_lookups * ELEM_SIZE)
+            m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)
+        else:
+            # Random access - use latency.
+            rand_cost = 0.0
+            vector_size = l.vector.length * ELEM_SIZE
+            prev_p = 0.0
+            for i in xrange(len(block_sizes)):
+                # Number of blocks in the vector.
+                blocks = vector_size / block_sizes[i]
+                p = cache_sizes[i] / blocks
+                p = min(1.0, max(p, 0.0))
+                old_p = p
+                p -= prev_p
+                prev_p += p
+                rand_cost += p * latencies[i]
+                if old_p == 1.0:
+                    break
+
+            # Factor in the DRAM access latency for "unaccounted" probabilities.
+            if prev_p != 1.0:
+                p = 1.0 - prev_p
+                rand_cost += p * latencies[-1]
+            m_cost += (num_lookups * rand_cost)
 
     # Add memory and processing cost here.
+    # TODO what's the correct way to combine these?
     return p_cost + m_cost
-
-def processing_cost(expr):
-    # Get the processing cost of an exprssion.
-    ctx = {}
-    ctx['iters'] = float(expr.iters / expr.stride)
-    # Return the processing cost of the For loop's expression.
-    return expr.expr.cost(ctx)

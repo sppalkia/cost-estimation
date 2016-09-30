@@ -157,9 +157,10 @@ def is_sequential(lookup, indices):
             return False
 
     # Don't support complex expressions for now.
+    # TODO this needs to be slightly more complex (e.g. Mods are special).
     if isinstance(index, BinaryExpr):
         if not isinstance(index, Add) and not isinstance(index, Subtract):
-            raise ValueError
+            return False
 
     for c in index.children():
         if not is_sequential(c, indicies):

@@ -7,7 +7,7 @@ import subprocess
    to the desired format expected by Gnuplot), and provided input command line args,
    creates a plot of the data"""
 
-def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot):
+def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot, useXLog=False):
   # Read titles from header of input file
   titles = None
   with open(inputFile, 'r') as f:
@@ -32,7 +32,14 @@ def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot):
   set output '%s'
   set xlabel "%s"
   set ylabel "%s"
+  """
 
+  if useXLog:
+    gnuplotStr += """
+    set logscale x
+    """
+
+  gnuplotStr += """
   set xtics border nomirror
   set ytics border nomirror
   set style fill empty
@@ -51,7 +58,9 @@ def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot):
   set style line 7 lw 1 lt 8 lc rgb 'violet' pt 3 ps 1;
 
   plot %s
-    """ % (outputFile, xLabel, yLabel, ", ".join(plots))
+    """ 
+  
+  gnuplotStr = gnuplotStr % (outputFile, xLabel, yLabel, ", ".join(plots))
 
   with open("plot.gnuplot", "w") as f:
     f.write(gnuplotStr)
@@ -79,9 +88,11 @@ if __name__ == '__main__':
     help="Directory where *.pdf files need to be moved")
   parser.add_argument('-c', "--colsToPlot", required=True,
     help="Columns to plot")
+  parser.add_argument('-l', "--useXLog", required=False,
+    help="Use log scale for x axis", action='store_true')
 
   cmdLineArgs = parser.parse_args()
   optDict = vars(cmdLineArgs)
 
   main(optDict["inputFile"], optDict["outputFileTemplate"], optDict["xLabel"],
-       optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"])
+       optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"], optDict["useXLog"])
