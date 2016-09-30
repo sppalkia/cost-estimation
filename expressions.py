@@ -28,6 +28,9 @@ class Expr:
 
 # Literals have no cost.
 class Literal(Expr):
+    def __init__(self, value=None):
+        self.value = value
+
     def cost(self, ctx):
         if "selectivity" in ctx:
             self.p_execute = ctx["selectivity"]
@@ -37,7 +40,7 @@ class Literal(Expr):
         return 0.
 
     def __str__(self):
-        return "X"
+        return str(self.value) if self.value is not None else "?"
 
 class Id(Expr):
     def __init__(self, name):
@@ -53,6 +56,96 @@ class Id(Expr):
         if not isinstance(other, Id):
             return False
         return self.name == other.name
+
+class VecMergerMerge(Expr):
+    # Represents a merge into a VecMerger.
+    def __init__(self, builder, index, mergeExpr, elemSize):
+        # The index accessed for the vecmerger.
+        # Resolves to a lookup in the VecMerger's internal buffer.
+        self.lookup = Lookup(Vector("vm" + str(self.id)), index)
+
+        # The merge expression, which represents the cost of merging
+        # a value into the VecMerger *after the VecMerger value at the index
+        # has been loaded*.
+        self.mergeExpr = mergeExpr
+
+        # The size of a single element in the vecmerger.
+        # TODO - this might be sizeof(void *) if the struct is huge.
+        self.elemSize = elemSize
+
+    def children(self):
+        # We decompose the VecMerger into a Lookup for the element we update
+        # and a merge expression.
+        return [self.lookup, self.mergeExpr]
+
+    def cost(self, ctx):
+        return self.mergeExpr.cost()
+
+
+class Let(Expr):
+    # A let statement like in ML that saves an expression name for a value.
+    def __init__(self, name, value, expr):
+        if isinstance(name, str):
+            self.name = Id(name)
+        else:
+            # An Id node representing the name of the expression.
+            self.name = name
+        # The value assigned to the Id.
+        self.value = value
+        # The expression after the assignment.
+        self.expr = expr
+
+    def children(self):
+        return [self.value, self.expr]
+
+    def cost(self, ctx):
+        valueCost = self.value.cost(ctx)
+        if "names" not in ctx: ctx["names"] = {}
+        ctx["names"][self.name] = value
+        exprCost = self.expr.cost(ctx)
+        del ctx["names"][self.name]
+        return valueCost + exprCost
+
+    def __str__(self):
+        return "{0} := {1}; {2}".format(self.name, str(self.value), str(self.expr))
+
+class StructLiteral(Expr):
+    # A struct literal, which takes a (statically known) list of
+    # expressions. This expression should almost always be paired with
+    # a Let statement, since it's values are only initialized once in real
+    # generated code.
+    def __init__(self, exprs):
+        # A name for the struct literal, so it can be referenced by other nodes.
+        self.exprs = exprs
+
+    def cost(self, ctx):
+        return sum([e.cost(ctx) for e in self.exprs])
+
+    def children(self):
+        return self.exprs
+
+    def __str__(self):
+        s = [str(e) for e in self.exprs]
+        s = ",".join(s)
+        return "{" + s + "}"
+
+class GetField(Expr):
+    def __init__(self, struct, index, size=4.0):
+        # The struct to get the field from.
+        self.struct = struct
+        # The integer index of the struct.
+        self.index = index
+        # The size of the element being loaded, in bytes.
+        self.size = 4.0
+
+    def cost(self, ctx):
+        # We assume GetField does a load from memory, so assume that cost
+        # is zero/considered when we compute the memory cost.
+        structCost = self.struct.cost(ctx)
+        return structCost
+
+    def __str__(self):
+        return "{0}.{1}".format(self.struct, self.index)
 
 class BinaryExpr(Expr):
     def __init__(self, left, right):
