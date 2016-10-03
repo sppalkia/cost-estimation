@@ -3,6 +3,7 @@
 import math
 
 from reuse_distance import *
+import sys
 
 class Expr:
     # Root expression class
@@ -57,18 +58,20 @@ class Id(Expr):
             return False
         return self.name == other.name
 
+    def __hash__(self):
+        return hash(self.name)
+
 class VecMergerMerge(Expr):
     # Represents a merge into a VecMerger.
     def __init__(self, builder, index, mergeExpr, elemSize):
         # The index accessed for the vecmerger.
         # Resolves to a lookup in the VecMerger's internal buffer.
-        self.lookup = Lookup(Vector("vm" + str(self.id)), index)
+        self.lookup = Lookup(builder, index)
 
         # The merge expression, which represents the cost of merging
         # a value into the VecMerger *after the VecMerger value at the index
         # has been loaded*.
         self.mergeExpr = mergeExpr
-
         # The size of a single element in the vecmerger.
         # TODO - this might be sizeof(void *) if the struct is huge.
         self.elemSize = elemSize
@@ -79,7 +82,10 @@ class VecMergerMerge(Expr):
         return [self.lookup, self.mergeExpr]
 
     def cost(self, ctx):
-        return self.mergeExpr.cost()
+        return self.mergeExpr.cost(ctx)
+
+    def __str_(self):
+        return "merge({0}, {1}, {2})".format(self.lookup, self.mergeExpr, self.elemSize)
 
 
 class Let(Expr):
@@ -96,12 +102,12 @@ class Let(Expr):
         self.expr = expr
 
     def children(self):
-        return [self.value, self.expr]
+        return [self.name, self.value, self.expr]
 
     def cost(self, ctx):
         valueCost = self.value.cost(ctx)
         if "names" not in ctx: ctx["names"] = {}
-        ctx["names"][self.name] = value
+        ctx["names"][self.name] = self.value
         exprCost = self.expr.cost(ctx)
         del ctx["names"][self.name]
         return valueCost + exprCost
@@ -122,7 +128,7 @@ class StructLiteral(Expr):
         return sum([e.cost(ctx) for e in self.exprs])
 
     def children(self):
-        return self.exprs
+        return list(self.exprs)
 
     def __str__(self):
         s = [str(e) for e in self.exprs]
@@ -143,6 +149,9 @@ class GetField(Expr):
         # is zero/considered when we compute the memory cost.
         structCost = self.struct.cost(ctx)
         return structCost
+
+    def children(self):
+        return [self.struct]
 
     def __str__(self):
         return "{0}.{1}".format(self.struct, self.index)
@@ -269,7 +278,7 @@ class If(Expr):
 
         # Get the smallest iteration distance. If it's sufficiently small, we
         # use it to amortize the branch prediction cost.
-        it_distance = min([iteration_distance(id_node, ctx["loops"]) for id_node in ids])
+        it_distance = min(sys.maxint, [iteration_distance(id_node, ctx["loops"]) for id_node in ids])
 
         if "selectivity" in ctx:
             old_s = ctx["selectivity"]
@@ -336,12 +345,15 @@ class Lookup(Expr):
                     self.vector == other.vector and\
                     self.index == other.index
 
+    def children(self):
+        return [self.vector] + self.index
+
     def __hash__(self):
         return hash(str(self.vector) + str(self.index))
 
     def __str__(self):
         return "lookup({0},{1})".format(str(self.vector),
-                str(self.index) if self.index is not None else "i")
+                [str(i) for i in self.index] if self.index is not None else "?")
 
     def cost(self, ctx):
         # Sets annotations on a lookup node; doesn't perform any cost calculation.

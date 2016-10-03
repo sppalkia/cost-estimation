@@ -22,31 +22,57 @@ Things to model that are new:
     - Writes in VecMergers
 """
 
+from expressions import *
+from cost_with_bandwidth import cost
+
+# The branch selectivity.
+s = 1.0
+# The number of buckets.
+b = 6
+# Iterations
+iterations = 1000
+
+# An ID referring to the struct at the current loop index.
+lineId = Id("line")
+# An ID referring to the struct at the desired builder index.
+builderId = Id("b")
+
 # line.5 * X + line.6
-mergeIndex = Add(Multiply(GetField("line", 5), Literal()), GetField("line", 6))
+mergeIndex = Add(Multiply(GetField(lineId, 5), Literal()), GetField(lineId, 6))
 
 # The merge expression loads the value in the builder for each struct field and
 # adds it to a new value generated during this loop iteration.
+#
+# [
+#   line.0 + b.0,
+#   line.1 + b.1,
+#   line.2 + b.2,
+#   line.1 * ( n - line.2) + b.3,
+#   (line.1 * (1 - line.2)) * (1 + line.3) + b.4
+#   1 + b.5
 mergeExpr = StructLiteral([
-        Add(GetField("line", 0), GetField("b", 0)),
-        Add(GetField("line", 1), GetField("b", 1)),
-        Add(GetField("line", 2), GetField("b", 2)),
-        Add(Multiply(GetField("line", 1), Subtract(Literal(), GetField("line", 2))), GetField("b", 3)),
-        Add(Multiply(Multiply(GetField("line", 1), Subtract(Literal(), GetField("line", 2))), Add(Literal(), GetField("line", 3))), GetField("b", 4)),
-        Add(Literal(), GetField("b", 5)),
+        Add(GetField(lineId, 0), GetField(builderId, 0)),
+        Add(GetField(lineId, 1), GetField(builderId, 1)),
+        Add(GetField(lineId, 2), GetField(builderId, 2)),
+        Add(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), GetField(builderId, 3)),
+        Add(Multiply(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), Add(Literal(), GetField(lineId, 3))), GetField(builderId, 4)),
+        Add(Literal(), GetField(builderId, 5)),
         ])
 
-condition = GreaterThan(GetField("line", 4), Literal())
-loopBody = If(condition, VecMergerMerge(mergeIndex, mergeExpr), Literal())
-loop = For(iterations, Id("i"), 1, loopBody)
+# (line.4 > n)
+condition = GreaterThan(GetField(lineId, 4), Literal())
+# Set the selectivity of the branch.
+condition.selectivity = s
+branch = If(condition, VecMergerMerge(Vector("B", b), mergeIndex, mergeExpr, 24), Literal())
 
-"""
-For now we can say there's no cost to creating a "struct literal" (no overhead, that is).
+loopVar = Id("i")
 
+# Construct the loop body - use Let statements to get the structs into variables.
+loopBody = Let(lineId, Lookup("V", loopVar), branch)
+expr = For(iterations, Id("i"), 1, loopBody)
 
-# Two steps :
-    First, we load the value from the VecMerger's buffer. The index and the size is required for this.
-    Second, we use the *loaded* value to get a computation cost. How do we model an access to a value
-    that doesn't fit in cache? E.g. Lookup(something that's a struct) -> GetField.
-For(iterations, Id("i"), 1, VecMergerMerge(index, Add(Literal(), Literal()))
-"""
+def print_result(name, value):
+    print "{0}: {1}".format(name, value)
+
+c = cost(expr)
+print_result("Q1", c)
