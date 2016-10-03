@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$CBO" ]; then
+    echo "Set CBO to root of this repo."
+    exit 1
+fi
+
+
+# The root CBO directory
+RAW=$CBO/raw/q1_costs
+
+rm -rf $RAW
+rm -f $CBO/plots/q1_cost_plot.pdf
+
+mkdir -p $RAW
+
+python $CBO/q1_cost.py > $RAW/raw.out
+$CBO/scripts/parse-q1-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o q1_cost_plot -x "Bucket Size" -y "Normalized cost" -d $CBO/plots -c 0,1,2,3,4,5 -l

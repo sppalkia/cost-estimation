@@ -5,7 +5,7 @@ if [ -z "$CBO" ]; then
     exit 1
 fi  
 
-for it in 1; do 
+for it in 1 2 3 4 5; do 
     for b in 10 1000 10000 100000 1000000 10000000 100000000; do
         echo ----- $b -----
         for p in 0.01 0.1 0.5 0.75 1.0; do

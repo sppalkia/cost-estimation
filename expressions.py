@@ -82,9 +82,9 @@ class VecMergerMerge(Expr):
         return [self.lookup, self.mergeExpr]
 
     def cost(self, ctx):
-        return self.mergeExpr.cost(ctx)
+        return self.lookup.cost(ctx) + self.mergeExpr.cost(ctx)
 
-    def __str_(self):
+    def __str__(self):
         return "merge({0}, {1}, {2})".format(self.lookup, self.mergeExpr, self.elemSize)
 
 
