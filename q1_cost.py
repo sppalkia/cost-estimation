@@ -70,7 +70,7 @@ for b in [100, 1000, 10000, 100000, 1000000, 10000000, 100000000]:
         loopVar = Id("i")
 
         # Construct the loop body - use Let statements to get the structs into variables.
-        loopBody = Let(lineId, Lookup("V", loopVar), branch)
+        loopBody = Let(lineId, Lookup("V", loopVar, 24), branch)
         expr = For(iterations, Id("i"), 1, loopBody)
 
         c = cost(expr)

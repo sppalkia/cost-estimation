@@ -43,6 +43,7 @@ class Literal(Expr):
     def __str__(self):
         return str(self.value) if self.value is not None else "?"
 
+# Ids have no cost.
 class Id(Expr):
     def __init__(self, name):
         self.name = name
@@ -82,6 +83,8 @@ class VecMergerMerge(Expr):
         return [self.lookup, self.mergeExpr]
 
     def cost(self, ctx):
+        # The cost of merging a value is (naively) the cost of looking up an
+        # element in the buffer, and the cost of merging the expression in.
         return self.lookup.cost(ctx) + self.mergeExpr.cost(ctx)
 
     def __str__(self):
@@ -327,7 +330,7 @@ class Vector(Expr):
 
 class Lookup(Expr):
     # A memory lookup into an array.
-    def __init__(self, vector, index):
+    def __init__(self, vector, index, elemSize=4.0):
 
         if isinstance(vector, str):
             self.vector = Vector(vector, 0)
@@ -338,6 +341,8 @@ class Lookup(Expr):
             self.index = [index]
         else:
             self.index = index
+
+        self.elemSize = elemSize
         self.sequential = False
 
     def __eq__(self, other):
