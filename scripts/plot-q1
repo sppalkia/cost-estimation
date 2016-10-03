@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$CBO" ]; then
+    echo "Set CBO to root of this repo."
+    exit 1
+fi  
+
+
+# The root CBO directory
+RAW=$CBO/raw/q1_bench
+
+rm -rf $RAW
+rm -f $CBO/plots/q1_bench_plot.pdf
+
+mkdir -p $RAW
+
+$CBO/q1_bench/test.sh > $RAW/raw.out
+$CBO/scripts/parse-q1-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q1_bench_plot -x "Buckets" -y "Time (in seconds)" -d $CBO/plots -c 0,1,2,3,4,5 -l

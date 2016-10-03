@@ -5,7 +5,11 @@
  *
  */
 #include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/time.h>
 
 // Value for the predicate to pass.
 #define PASS 100
@@ -92,6 +96,51 @@ struct gen_data generate_data(int num_items, int num_buckets, float prob) {
 }
 
 int main(int argc, char **argv) {
+
+    // Number of bucket entries (default = 6, same as TPC-H Q1)
+    int num_buckets = 6;
+    // Number of elements in array (should be >> cache size);
+    int num_items = (1E8 / sizeof(int));
+    // Approx. PASS probability.
+    float prob = 0.01;
+
+    int ch;
+    while ((ch = getopt(argc, argv, "b:n:p:")) != -1) {
+        switch (ch) {
+            case 'b':
+                num_buckets = atoi(optarg);
+                break;
+            case 'n':
+                num_items = atoi(optarg);
+                break;
+            case 'p':
+                prob = atof(optarg);
+                break;
+            case '?':
+            default:
+                fprintf(stderr, "invalid options");
+                exit(1);
+        }
+    }
+
+    // Check parameters.
+    assert(num_buckets > 0);
+    assert(num_items > 0);
+    assert(prob >= 0.0 && prob <= 1.0);
+
+    printf("n=%d, b=%d, p=%f\n", num_items, num_buckets, prob);
+
+    struct gen_data d = generate_data(num_items, num_buckets, prob);
+    long sum;
+    struct timeval start, end, diff;
+
+    gettimeofday(&start, 0);
+    run_query(&d);
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("Result: %ld.%06ld (result=%d)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec, d.buckets[0].count);
+
     return 0;
 }
 
