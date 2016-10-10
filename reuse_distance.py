@@ -84,10 +84,11 @@ def reuse_distance_to_next(lookup_idxs, loops, should_break=True):
     for loop in loops:
         iters, loop_idx = loop
         if should_break:
-            if contains(lookup_idxs, loop_idx):
+            if contains([lookup_idxs[-1]], loop_idx):
                 break
             seen_loops.append(loop)
-            dist *= iters
+            if contains(lookup_idxs, loop_idx):
+                dist *= iters
         else:
             if contains(lookup_idxs, loop_idx):
                 dist *= iters
@@ -140,11 +141,11 @@ def reuse_distance(lookup, other_lookups, loops):
                        # to determine reuse-distance. All other elements in the same cache
                        # line only depend on the previous element being accessed.
 
-    dist_to_next, seen_loops = reuse_distance_to_next([lookup_idxs[-1]], reversed(loops))
+    dist_to_next, seen_loops = reuse_distance_to_next(lookup_idxs, reversed(loops))
     for other_lookup_idxs in all_other_lookup_idxs:
         other_dist_to_next, _ = reuse_distance_to_next(other_lookup_idxs, seen_loops,
                                                        should_break=False)
-        dist_to_next += other_dist
+        dist_to_next += other_dist_to_next
 
     # 15 out of 16 elements depend on the number of distinct elements accessed since the
     # previous element in the _same_ cache line is accessed.
