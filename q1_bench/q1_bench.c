@@ -41,7 +41,7 @@ struct q1_entry {
 };
 
 // The generated input data.
-struct gen_data {
+sM Útruct gen_data {
     // Number of lineitems in the table.
     int32_t num_items;
     // Number of num_buckets/size of the hash table.
