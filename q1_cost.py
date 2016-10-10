@@ -38,7 +38,45 @@ iterations = 1000
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
-for b in [100, 1000, 10000, 100000, 1000000, 10000000, 100000000]:
+def costForQuery(b, p, iterations, globalTable):
+    mergeExpr = StructLiteral([
+            Add(GetField(lineId, 0), GetField(builderId, 0)),
+            Add(GetField(lineId, 1), GetField(builderId, 1)),
+            Add(GetField(lineId, 2), GetField(builderId, 2)),
+            Add(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), GetField(builderId, 3)),
+            Add(Multiply(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), Add(Literal(), GetField(lineId, 3))), GetField(builderId, 4)),
+            Add(Literal(), GetField(builderId, 5)),
+            ])
+
+    # (line.4 > n)
+    condition = GreaterThan(GetField(lineId, 4), Literal())
+    branch = If(condition, VecMergerMerge(Vector("B", b), mergeIndex, mergeExpr, 24, globalTable), Literal())
+    # Set the selectivity of the branch.
+    branch.selectivity = p
+    loopVar = Id("i")
+    # Construct the loop body - use Let statements to get the structs into variables.
+    loopBody = Let(lineId, Lookup("V", loopVar, 24), branch)
+    expr = For(iterations, Id("i"), 1, loopBody)
+
+    c = cost(expr)
+
+    if globalTable:
+        label = "Global"
+        result = FixedCostExpr(10000)
+        resCost = cost(result)
+    else:
+        label = "Local"
+        # TODO switch this to use VecMergerResult. This for loop represents the
+        # merging of the global tables. This is also slightly broken because
+        # the  fixed cost of merging the results isn't 1...it's much higher
+        # than that.
+        result = For(b, Id("r"), 1, FixedCostExpr(1))
+        resCost = cost(result)
+        print resCost
+
+    print_result(label, c + resCost)
+
+for b in [10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000]:
     print "----- {0} -----".format(b)
     for p in [0.01, 0.1, 0.5, 0.75, 1.0]:
         print "n={0}, b={1}, p={2}".format(iterations, b, p)
@@ -52,26 +90,5 @@ for b in [100, 1000, 10000, 100000, 1000000, 10000000, 100000000]:
         #   line.1 * ( n - line.2) + b.3,
         #   (line.1 * (1 - line.2)) * (1 + line.3) + b.4
         #   1 + b.5
-        mergeExpr = StructLiteral([
-                Add(GetField(lineId, 0), GetField(builderId, 0)),
-                Add(GetField(lineId, 1), GetField(builderId, 1)),
-                Add(GetField(lineId, 2), GetField(builderId, 2)),
-                Add(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), GetField(builderId, 3)),
-                Add(Multiply(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), Add(Literal(), GetField(lineId, 3))), GetField(builderId, 4)),
-                Add(Literal(), GetField(builderId, 5)),
-                ])
-
-        # (line.4 > n)
-        condition = GreaterThan(GetField(lineId, 4), Literal())
-        branch = If(condition, VecMergerMerge(Vector("B", b), mergeIndex, mergeExpr, 24), Literal())
-        # Set the selectivity of the branch.
-        branch.selectivity = p
-
-        loopVar = Id("i")
-
-        # Construct the loop body - use Let statements to get the structs into variables.
-        loopBody = Let(lineId, Lookup("V", loopVar, 24), branch)
-        expr = For(iterations, Id("i"), 1, loopBody)
-
-        c = cost(expr)
-        print_result("Result", c)
+        costForQuery(b, p, iterations, True)
+        costForQuery(b, p, iterations, False)

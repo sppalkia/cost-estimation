@@ -8,35 +8,49 @@ import argparse
 def main(inputFile, outputFile):
   # First, read the raw log from the ./test.sh script and parse out
   # times and input parameters
-  queryTimes = dict()
+  localHashTableTimes = dict()
+  globalHashTableTimes = dict()
   bs = set()
   ps = set()
   with open(inputFile, 'r') as f:
     b, p = None, None
     for line in f:
-      if "b=" in line and "p=" in line:
-        [_, bStr, pStr] = line.split(", ")
+      if "n=" in line and "b=" in line and "p=" in line:
+        [nStr, bStr, pStr] = line.split(", ")
         b = int(bStr.split("=")[1])
         p = float(pStr.split("=")[1])
         bs.add(b)
         ps.add(p)
-
-        if b not in queryTimes: queryTimes[b] = dict()
-        if p not in queryTimes[b]: queryTimes[b][p] = []
-      elif "Result" in line:
+        if b not in localHashTableTimes: localHashTableTimes[b] = dict()
+        if b not in globalHashTableTimes: globalHashTableTimes[b] = dict()
+        if p not in localHashTableTimes[b]: localHashTableTimes[b][p] = []
+        if p not in globalHashTableTimes[b]: globalHashTableTimes[b][p] = []
+      elif "Local" in line:
         time = float(line.split()[1])
-        queryTimes[b][p].append(time)
+        localHashTableTimes[b][p].append(time)
+      elif "Global" in line:
+        time = float(line.split()[1])
+        globalHashTableTimes[b][p].append(time)
 
   # Normalize all the data.
+  """
   maximum = 0.0
-  for k in queryTimes:
-      for n in queryTimes[k]:
-          queryTimes[k][n] = [sum(queryTimes[k][n]) / len(queryTimes[k][n])]
-          maximum = max(maximum, queryTimes[k][n][0])
+  for b in localHashTableTimes:
+      for p in localHashTableTimes[b]:
+          localHashTableTimes[b][p] = [sum(localHashTableTimes[b][p]) / len(localHashTableTimes[b][p])]
+          maximum = max(maximum, localHashTableTimes[b][p][0])
+  for b in globalHashTableTimes:
+      for p in globalHashTableTimes[b]:
+          globalHashTableTimes[b][p] = [sum(globalHashTableTimes[b][p]) / len(globalHashTableTimes[b][p])]
+          maximum = max(maximum, globalHashTableTimes[b][p][0])
 
-  for k in queryTimes:
-      for n in queryTimes[k]:
-          queryTimes[k][n] = [x / float(maximum) for x in queryTimes[k][n]]
+  for b in localHashTableTimes:
+      for p in localHashTableTimes[b]:
+          localHashTableTimes[b][p] = [x / float(maximum) for x in localHashTableTimes[b][p]]
+  for b in globalHashTableTimes:
+      for p in globalHashTableTimes[b]:
+          globalHashTableTimes[b][p] = [x / float(maximum) for x in globalHashTableTimes[b][p]]
+  """
 
   # Now, write out parsed data in the format expected by Gnuplot:
   #
@@ -48,16 +62,19 @@ def main(inputFile, outputFile):
   # Every subsequent line is a list of space-delimited numbers (the first
   # number being the row value, and all subsequent values being the corresponding
   # column value
+  ps = list(ps); ps.sort()
   bs = list(bs); bs.sort()
   with open(outputFile, 'w') as f:
     headerStrs = list()
     for p in ps:
-      headerStrs.append("p=%.2f (Branch Prob.)" % p)
+      headerStrs.append("p=%.4f (Local)" % p)
+      headerStrs.append("p=%.4f (Global)" % p)
     f.write("#\t%s\n" % "\t".join(headerStrs))
-    for k in bs:
-      f.write("%.2f" % k)
+    for b in bs:
+      f.write("%.2f" % b)
       for p in ps:
-        f.write(" %.2f" % (sum(queryTimes[k][p]) / len(queryTimes[k][p])))
+        f.write(" %.2f" % (sum(localHashTableTimes[b][p]) / len(localHashTableTimes[b][p])))
+        f.write(" %.2f" % (sum(globalHashTableTimes[b][p]) / len(globalHashTableTimes[b][p])))
       f.write("\n")
 
 

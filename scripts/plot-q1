@@ -9,11 +9,12 @@ fi
 # The root CBO directory
 RAW=$CBO/raw/q1_bench
 
-rm -rf $RAW
+#rm -rf $RAW
 rm -f $CBO/plots/q1_bench_plot.pdf
 
-mkdir -p $RAW
+#mkdir -p $RAW
 
-$CBO/q1_bench/test.sh > $RAW/raw.out
+#$CBO/q1_bench/test.sh > $RAW/raw.out
 $CBO/scripts/parse-q1-logs -i $RAW/raw.out -o $RAW/processed.out
-$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q1_bench_plot -x "Buckets" -y "Time (in seconds)" -d $CBO/plots -c 0,1,2,3,4,5 -l
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q1_plot_p1 -x "Keys" -y "Time (in seconds)" -d $CBO/plots -c 8,9 -l -m
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q1_plot_p001 -x "Keys" -y "Time (in seconds)" -d $CBO/plots -c 0,1 -l -m

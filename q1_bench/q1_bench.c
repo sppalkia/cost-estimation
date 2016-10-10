@@ -147,7 +147,8 @@ void run_query_global_table(struct gen_data *d) {
  * @param d the input data.
  */
 void run_query_local_table(struct gen_data *d) {
-    struct q1_entry *buckets = (struct q1_entry *)malloc(sizeof(struct q1_entry) * d->num_buckets * NUM_PARALLEL_THREADS);
+    struct q1_entry *buckets = (struct q1_entry *)malloc(
+            sizeof(struct q1_entry) * d->num_buckets * NUM_PARALLEL_THREADS);
     memset(buckets, 0, sizeof(struct q1_entry) * d->num_buckets * NUM_PARALLEL_THREADS);
 
 #pragma omp parallel for

@@ -7,7 +7,7 @@ import subprocess
    to the desired format expected by Gnuplot), and provided input command line args,
    creates a plot of the data"""
 
-def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot, useXLog=False):
+def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot, useXLog=False, useYLog=False):
   # Read titles from header of input file
   titles = None
   with open(inputFile, 'r') as f:
@@ -37,6 +37,11 @@ def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot, u
   if useXLog:
     gnuplotStr += """
     set logscale x
+    """
+
+  if useYLog:
+    gnuplotStr += """
+    set logscale y
     """
 
   gnuplotStr += """
@@ -90,9 +95,11 @@ if __name__ == '__main__':
     help="Columns to plot")
   parser.add_argument('-l', "--useXLog", required=False,
     help="Use log scale for x axis", action='store_true')
+  parser.add_argument('-m', "--useYLog", required=False,
+    help="Use log scale for y axis", action='store_true')
 
   cmdLineArgs = parser.parse_args()
   optDict = vars(cmdLineArgs)
 
   main(optDict["inputFile"], optDict["outputFileTemplate"], optDict["xLabel"],
-       optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"], optDict["useXLog"])
+       optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"], optDict["useXLog"], optDict["useYLog"])

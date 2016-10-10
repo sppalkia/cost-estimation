@@ -5,6 +5,9 @@ import math
 from reuse_distance import *
 import sys
 
+# Number of cores used in a multicore system.
+CORES = 4
+
 class Expr:
     # Root expression class
     newId = 0
@@ -62,9 +65,39 @@ class Id(Expr):
     def __hash__(self):
         return hash(self.name)
 
+class FixedCostExpr(Expr):
+    def __init__(self, fixedCost):
+        self.fixedCost = fixedCost
+
+    def __str__(self):
+        return "fixed({0})".format(self.fixedCost)
+
+    def cost(self, ctx):
+        return self.fixedCost
+
+class VecMergerResult(Expr):
+    def __init__(self, globalTable, vecMergerSize, mergeCost):
+        # Flag which specifies whether the table is global or local.
+        self.globalTable = globalTable
+        # Number of buckets in the vecmerger.
+        self.vecMergerSize = vecMergerSize
+        # An approximate cost for merging a single value into the vecmerger.
+        self.mergeCost = mergeCost
+
+    def __str__(self):
+        return "res(global={0}, {1})".format(self.globalTable, self.vecMergerSize)
+
+    def cost(self, ctx):
+        # Arbitrary fixed cost for cleanup.
+        if self.globalTable:
+            return 10000
+        else:
+            # We run the run procedure on each partial table.
+            return self.vecMergerSize * self.mergeCost
+
 class VecMergerMerge(Expr):
     # Represents a merge into a VecMerger.
-    def __init__(self, builder, index, mergeExpr, elemSize):
+    def __init__(self, builder, index, mergeExpr, elemSize, globalTable):
         # The index accessed for the vecmerger.
         # Resolves to a lookup in the VecMerger's internal buffer.
         self.lookup = Lookup(builder, index)
@@ -77,6 +110,9 @@ class VecMergerMerge(Expr):
         # TODO - this might be sizeof(void *) if the struct is huge.
         self.elemSize = elemSize
 
+        # If true, uses a global hash table. Otherwise, uses a local one.
+        self.globalTable = globalTable
+
     def children(self):
         # We decompose the VecMerger into a Lookup for the element we update
         # and a merge expression.
@@ -85,7 +121,19 @@ class VecMergerMerge(Expr):
     def cost(self, ctx):
         # The cost of merging a value is (naively) the cost of looking up an
         # element in the buffer, and the cost of merging the expression in.
-        return self.lookup.cost(ctx) + self.mergeExpr.cost(ctx)
+        l = self.lookup.cost(ctx)
+        m = self.mergeExpr.cost(ctx)
+        if self.globalTable:
+            print self.lookup.vector.length
+            elems = self.lookup.vector.length
+            # Probability of contention = access prob. 
+            p_contend = 1.0 - pow((1.0 - (1.0 / elems)), CORES)
+            print "p_contend", p_contend
+            # We give some (high) fixed cost for an atomic instruction,
+            # and a large penalty in case there's contention. Contention probability
+            # is the probability that two cores update the same element at once.
+            m *= (10 + (100 * p_contend))
+        return l + m
 
     def __str__(self):
         return "merge({0}, {1}, {2})".format(self.lookup, self.mergeExpr, self.elemSize)
