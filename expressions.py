@@ -124,11 +124,8 @@ class VecMergerMerge(Expr):
         l = self.lookup.cost(ctx)
         m = self.mergeExpr.cost(ctx)
         if self.globalTable:
-            print self.lookup.vector.length
-            elems = self.lookup.vector.length
             # Probability of contention = access prob. 
             p_contend = 1.0 - pow((1.0 - (1.0 / elems)), CORES)
-            print "p_contend", p_contend
             # We give some (high) fixed cost for an atomic instruction,
             # and a large penalty in case there's contention. Contention probability
             # is the probability that two cores update the same element at once.
