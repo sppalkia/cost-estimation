@@ -3,6 +3,10 @@
 import math
 
 from reuse_distance import *
+import sys
+
+# Number of cores used in a multicore system.
+CORES = 4
 
 class Expr:
     # Root expression class
@@ -28,6 +32,9 @@ class Expr:
 
 # Literals have no cost.
 class Literal(Expr):
+    def __init__(self, value=None):
+        self.value = value
+
     def cost(self, ctx):
         if "selectivity" in ctx:
             self.p_execute = ctx["selectivity"]
@@ -37,8 +44,9 @@ class Literal(Expr):
         return 0.
 
     def __str__(self):
-        return "X"
+        return str(self.value) if self.value is not None else "?"
 
+# Ids have no cost.
 class Id(Expr):
     def __init__(self, name):
         self.name = name
@@ -53,6 +61,149 @@ class Id(Expr):
         if not isinstance(other, Id):
             return False
         return self.name == other.name
+
+    def __hash__(self):
+        return hash(self.name)
+
+class FixedCostExpr(Expr):
+    def __init__(self, fixedCost):
+        self.fixedCost = fixedCost
+
+    def __str__(self):
+        return "fixed({0})".format(self.fixedCost)
+
+    def cost(self, ctx):
+        return self.fixedCost
+
+class VecMergerResult(Expr):
+    def __init__(self, globalTable, vecMergerSize, mergeCost):
+        # Flag which specifies whether the table is global or local.
+        self.globalTable = globalTable
+        # Number of buckets in the vecmerger.
+        self.vecMergerSize = vecMergerSize
+        # An approximate cost for merging a single value into the vecmerger.
+        self.mergeCost = mergeCost
+
+    def __str__(self):
+        return "res(global={0}, {1})".format(self.globalTable, self.vecMergerSize)
+
+    def cost(self, ctx):
+        # Arbitrary fixed cost for cleanup.
+        if self.globalTable:
+            return 10000
+        else:
+            # We run the run procedure on each partial table.
+            return self.vecMergerSize * self.mergeCost
+
+class VecMergerMerge(Expr):
+    # Represents a merge into a VecMerger.
+    def __init__(self, builder, index, mergeExpr, elemSize, globalTable):
+        # The index accessed for the vecmerger.
+        # Resolves to a lookup in the VecMerger's internal buffer.
+        self.lookup = Lookup(builder, index)
+
+        # The merge expression, which represents the cost of merging
+        # a value into the VecMerger *after the VecMerger value at the index
+        # has been loaded*.
+        self.mergeExpr = mergeExpr
+        # The size of a single element in the vecmerger.
+        # TODO - this might be sizeof(void *) if the struct is huge.
+        self.elemSize = elemSize
+
+        # If true, uses a global hash table. Otherwise, uses a local one.
+        self.globalTable = globalTable
+
+    def children(self):
+        # We decompose the VecMerger into a Lookup for the element we update
+        # and a merge expression.
+        return [self.lookup, self.mergeExpr]
+
+    def cost(self, ctx):
+        # The cost of merging a value is (naively) the cost of looking up an
+        # element in the buffer, and the cost of merging the expression in.
+        l = self.lookup.cost(ctx)
+        m = self.mergeExpr.cost(ctx)
+        if self.globalTable:
+            elems = self.lookup.vector.length
+            # Probability of contention = access prob. 
+            p_contend = 1.0 - pow((1.0 - (1.0 / elems)), CORES)
+            # We give some (high) fixed cost for an atomic instruction,
+            # and a large penalty in case there's contention. Contention probability
+            # is the probability that two cores update the same element at once.
+            m *= (3 + (10 * p_contend))
+        return l + m
+
+    def __str__(self):
+        return "merge({0}, {1}, {2})".format(self.lookup, self.mergeExpr, self.elemSize)
+
+
+class Let(Expr):
+    # A let statement like in ML that saves an expression name for a value.
+    def __init__(self, name, value, expr):
+        if isinstance(name, str):
+            self.name = Id(name)
+        else:
+            # An Id node representing the name of the expression.
+            self.name = name
+        # The value assigned to the Id.
+        self.value = value
+        # The expression after the assignment.
+        self.expr = expr
+
+    def children(self):
+        return [self.name, self.value, self.expr]
+
+    def cost(self, ctx):
+        valueCost = self.value.cost(ctx)
+        if "names" not in ctx: ctx["names"] = {}
+        ctx["names"][self.name] = self.value
+        exprCost = self.expr.cost(ctx)
+        del ctx["names"][self.name]
+        return valueCost + exprCost
+
+    def __str__(self):
+        return "{0} := {1}; {2}".format(self.name, str(self.value), str(self.expr))
+
+class StructLiteral(Expr):
+    # A struct literal, which takes a (statically known) list of
+    # expressions. This expression should almost always be paired with
+    # a Let statement, since it's values are only initialized once in real
+    # generated code.
+    def __init__(self, exprs):
+        # A name for the struct literal, so it can be referenced by other nodes.
+        self.exprs = exprs
+
+    def cost(self, ctx):
+        return sum([e.cost(ctx) for e in self.exprs])
+
+    def children(self):
+        return list(self.exprs)
+
+    def __str__(self):
+        s = [str(e) for e in self.exprs]
+        s = ",".join(s)
+        return "{" + s + "}"
+
+class GetField(Expr):
+    def __init__(self, struct, index, size=4.0):
+        # The struct to get the field from.
+        self.struct = struct
+        # The integer index of the struct.
+        self.index = index
+        # The size of the element being loaded, in bytes.
+        self.size = 4.0
+
+    def cost(self, ctx):
+        # We assume GetField does a load from memory, so assume that cost
+        # is zero/considered when we compute the memory cost.
+        structCost = self.struct.cost(ctx)
+        return structCost
+
+    def children(self):
+        return [self.struct]
+
+    def __str__(self):
+        return "{0}.{1}".format(self.struct, self.index)
 
 class BinaryExpr(Expr):
     def __init__(self, left, right):
@@ -176,7 +327,7 @@ class If(Expr):
 
         # Get the smallest iteration distance. If it's sufficiently small, we
         # use it to amortize the branch prediction cost.
-        it_distance = min([iteration_distance(id_node, ctx["loops"]) for id_node in ids])
+        it_distance = min(sys.maxint, [iteration_distance(id_node, ctx["loops"]) for id_node in ids])
 
         if "selectivity" in ctx:
             old_s = ctx["selectivity"]
@@ -225,7 +376,7 @@ class Vector(Expr):
 
 class Lookup(Expr):
     # A memory lookup into an array.
-    def __init__(self, vector, index):
+    def __init__(self, vector, index, elemSize=4.0):
 
         if isinstance(vector, str):
             self.vector = Vector(vector, 0)
@@ -236,6 +387,8 @@ class Lookup(Expr):
             self.index = [index]
         else:
             self.index = index
+
+        self.elemSize = elemSize
         self.sequential = False
 
     def __eq__(self, other):
@@ -243,12 +396,15 @@ class Lookup(Expr):
                     self.vector == other.vector and\
                     self.index == other.index
 
+    def children(self):
+        return [self.vector] + self.index
+
     def __hash__(self):
         return hash(str(self.vector) + str(self.index))
 
     def __str__(self):
         return "lookup({0},{1})".format(str(self.vector),
-                str(self.index) if self.index is not None else "i")
+                [str(i) for i in self.index] if self.index is not None else "?")
 
     def cost(self, ctx):
         # Sets annotations on a lookup node; doesn't perform any cost calculation.

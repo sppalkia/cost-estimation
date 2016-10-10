@@ -32,9 +32,6 @@ TODO : Multi-core.
 from expressions import *
 from extended_cost_model import *
 
-# TODO this should be a paramter in the AST.
-ELEM_SIZE = 4.0
-
 def cost(expr, block_sizes=[], latencies=[]):
     # Return the cost of an expression.
     # block_sizes and latencies parameters unused.
@@ -74,6 +71,7 @@ def cost(expr, block_sizes=[], latencies=[]):
     m_cost = 0
 
     for l in lookups:
+        print l.p_execute
         num_lookups = (l.loops * l.p_execute)
         l_reuse_distance = reuse_distance(l, lookups, l.loops_seq)
 
@@ -84,12 +82,12 @@ def cost(expr, block_sizes=[], latencies=[]):
                 if cache_sizes[i] > l_reuse_distance:
                     cache_level = i
                     break
-            mem_lookups = (num_lookups * ELEM_SIZE)
+            mem_lookups = (num_lookups * l.elemSize)
             m_cost += (((mem_lookups) / memory_throughput[cache_level]) * clock_frequency)
         else:
             # Random access - use latency.
             rand_cost = 0.0
-            vector_size = l.vector.length * ELEM_SIZE
+            vector_size = l.vector.length * l.elemSize
             prev_p = 0.0
             for i in xrange(len(block_sizes)):
                 # Number of blocks in the vector.
