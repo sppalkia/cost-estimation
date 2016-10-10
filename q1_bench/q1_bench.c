@@ -156,6 +156,10 @@ void run_query_local_table(struct gen_data *d) {
         run_query_local_table_helper(d, buckets + (d->num_buckets * i), i);
     }
 
+    struct timeval start, end, diff;
+
+    gettimeofday(&start, 0);
+
     // Aggregate the values.
     for (int i = 0; i < NUM_PARALLEL_THREADS; i++) {
         for (int j = 0; j < d->num_buckets; j++) {
@@ -168,6 +172,11 @@ void run_query_local_table(struct gen_data *d) {
             d->buckets[j].count += buckets[b].count;
         }
     }
+
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("\tagg-time: %ld.%06ld\n",
+            (long) diff.tv_sec, (long) diff.tv_usec);
 }
 
 /** Generates input data.

@@ -25,6 +25,8 @@ Things to model that are new:
 from expressions import *
 from cost_with_bandwidth import cost
 
+CORES = 4
+
 # An ID referring to the struct at the current loop index.
 lineId = Id("line")
 # An ID referring to the struct at the desired builder index.
@@ -33,12 +35,17 @@ builderId = Id("b")
 # line.5 * X + line.6
 mergeIndex = GetField(lineId, 0)
 
-iterations = 1000
+iterations = 2.5e8
+
+BUCKET_SIZE = 24
 
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
 def costForQuery(b, p, iterations, globalTable):
+
+    iterations = iterations / CORES
+
     mergeExpr = StructLiteral([
             Add(GetField(lineId, 0), GetField(builderId, 0)),
             Add(GetField(lineId, 1), GetField(builderId, 1)),
@@ -49,16 +56,18 @@ def costForQuery(b, p, iterations, globalTable):
             ])
 
     # (line.4 > n)
+    vecMergerSize = b * CORES if not globalTable else b
     condition = GreaterThan(GetField(lineId, 4), Literal())
-    branch = If(condition, VecMergerMerge(Vector("B", b), mergeIndex, mergeExpr, 24, globalTable), Literal())
+    branch = If(condition, VecMergerMerge(Vector("B", vecMergerSize), mergeIndex, mergeExpr, BUCKET_SIZE, globalTable), Literal())
     # Set the selectivity of the branch.
     branch.selectivity = p
     loopVar = Id("i")
     # Construct the loop body - use Let statements to get the structs into variables.
-    loopBody = Let(lineId, Lookup("V", loopVar, 24), branch)
+    loopBody = Let(lineId, Lookup("V", loopVar, BUCKET_SIZE), branch)
     expr = For(iterations, Id("i"), 1, loopBody)
 
     c = cost(expr)
+    print c
 
     if globalTable:
         label = "Global"
@@ -70,8 +79,8 @@ def costForQuery(b, p, iterations, globalTable):
         # merging of the global tables. This is also slightly broken because
         # the  fixed cost of merging the results isn't 1...it's much higher
         # than that.
-        result = For(b, Id("r"), 1, FixedCostExpr(1))
-        resCost = cost(result)
+        result = For(b, Id("r"), 1, Add(Lookup("br", Id("r"), BUCKET_SIZE), FixedCostExpr(12)))
+        resCost = cost(result) * (CORES + 1)
         print resCost
 
     print_result(label, c + resCost)
