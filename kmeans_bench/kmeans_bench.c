@@ -1,60 +1,22 @@
-/*****
- ** kmeans.c
- ** - a simple k-means clustering routine
- ** - returns the cluster labels of the data points in an array
- ** - here's an example
- **   extern int *k_means(float**, int, int, int, float, float**);
- **   ...
- **   int *c = k_means(data_points, num_points, dim, 20, 1e-4, 0);
- **   for (i = 0; i < num_points; i++) {
- **      printf("data point %d is in cluster %d\n", i, c[i]);
- **   }
- **   ...
- **   free(c);
- ** Parameters
- ** - array of data points (float **data)
- ** - number of data points (int n)
- ** - dimension (int m)
- ** - desired number of clusters (int k)
- ** - error tolerance (float t)
- **   - used as the stopping criterion, i.e. when the sum of
- **     squared euclidean distance (standard error for k-means)
- **     of an iteration is within the tolerable range from that
- **     of the previous iteration, the clusters are considered
- **     "stable", and the function returns
- **   - a suggested value would be 0.0001
- ** - output address for the final centroids (float **centroids)
- **   - user must make sure the memory is properly allocated, or
- **     pass the null pointer if not interested in the centroids
- ** References
- ** - J. MacQueen, "Some methods for classification and analysis
- **   of multivariate observations", Fifth Berkeley Symposium on
- **   Math Statistics and Probability, 281-297, 1967.
- ** - I.S. Dhillon and D.S. Modha, "A data-clustering algorithm
- **   on distributed memory multiprocessors",
- **   Large-Scale Parallel Data Mining, 245-260, 1999.
- ** Notes
- ** - this function is provided as is with no warranty.
- ** - the author is not responsible for any damage caused
- **   either directly or indirectly by using this function.
- ** - anybody is free to do whatever he/she wants with this
- **   function as long as this header section is preserved.
- ** Created on 2005-04-12 by
- ** - Roger Zhang (rogerz@cs.dal.ca)
- ** Modifications
- ** -
- ** Last compiled under Linux with gcc-3
+/**
+ * An implementation of kmeans in C.
+ * Based on http://cs.smu.ca/~r_zhang/code/kmeans.c.
+ *
+ * See README for original license.
  */
 
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <assert.h>
-#include <float.h>
 #include <math.h>
-#include <unistd.h>
+#include <float.h>
 #include <string.h>
+#include <assert.h>
+#include <unistd.h>
 
+#include <sys/time.h>
+
+// Generated data parameters.
 struct gen_data {
     float *data;
     int n;
@@ -77,8 +39,14 @@ float distance_btwn(float *a, float *b, int dim) {
     return distance;
 }
 
-/** TODO
+/** Runs the kmeans clustering algorithm on the given input data.
+ * This function prints the runtime at the end of execution, not
+ * counting initialization time/cleanup.
  *
+ * @param d the input parameters.
+ *
+ * @return the labels assigned to the data points d->data. labels[i]
+ * denotes the label of d->data[i].
  */
 int *k_means(struct gen_data *d) {
 
@@ -97,6 +65,9 @@ int *k_means(struct gen_data *d) {
     // Temporary centroids.
     float *c1 = (float *)calloc(k * dim, sizeof(float));
 
+    // For timing.
+    struct timeval start, end, diff;
+
     // Sanity checks.
     assert(data && k > 0 && k <= n && dim > 0 && iterations >= 0);
 
@@ -109,6 +80,9 @@ int *k_means(struct gen_data *d) {
         }
         h += n / k;
     }
+
+    // Begin timing after iterations.
+    gettimeofday(&start, 0);
 
     while (iterations != 0) {
         // Clear old counts and temp centroids.
@@ -151,6 +125,13 @@ int *k_means(struct gen_data *d) {
         iterations--;
     }
 
+    // Finish timing.
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("Standard: %ld.%06ld (result=%d)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            labels[0]);
+
     // Cleanup.
     free(c);
     free(c1);
@@ -165,11 +146,12 @@ int *k_means(struct gen_data *d) {
  * @param m the dimension of the points.
  * @param k the number of clusters.
  */
-struct gen_data generate_data(int n, int m, int k) {
+struct gen_data generate_data(int n, int m, int k, int iters) {
     struct gen_data d;
     d.n = n;
     d.m = m;
     d.k = k;
+    d.iters = iters;
 
     // Generate random data.
     d.data = (float *)malloc(sizeof(float) * n * m);
@@ -186,9 +168,9 @@ int main(int argc, char **argv) {
 
     // Default values.
     size_t n = 1e6;
-    int m = 100;
+    int m = 2;
     int k = 5;
-    int iters = 10;
+    int iters = 1;
 
     int ch;
     while ((ch = getopt(argc, argv, "n:m:k:i:")) != -1) {
@@ -218,8 +200,12 @@ int main(int argc, char **argv) {
     assert(k > 0);
     assert(iters > 0);
 
-    struct gen_data d = generate_data(n, m, k);
-    int *labels = k_means(&d);
+    printf("n=%zu, m=%d, k=%d, iters=%d\n", n, m, k, iters);
+
+    struct gen_data d = generate_data(n, m, k, iters);
+
+    // Standard k-means.
+    k_means(&d);
 
     return 0;
 }
