@@ -72,7 +72,7 @@ int *k_means(struct gen_data *d) {
     struct timeval start, end, diff;
 
     // Sanity checks.
-    assert(data && k > 0 && k <= n && dim > 0 && iterations >= 0);
+    assert(data && k > 0 && dim > 0 && iterations >= 0);
 
     // Initialize.
     // Indexes into data to choose initialization points.
@@ -174,7 +174,7 @@ int *k_means_blocked(struct gen_data *d) {
     struct timeval start, end, diff;
 
     // Sanity checks.
-    assert(data && k > 0 && k <= n && dim > 0 && iterations >= 0);
+    assert(data && k > 0 && dim > 0 && iterations >= 0);
 
     // Initialize.
     // Indexes into data to choose initialization points.
