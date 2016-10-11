@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Setup git
+git config --global user.name "Shoumik Palkar"
+git config --global user.email "shoumik@csail.mit.edu"
+
+git config --global push.default simple
+
+git config --global core.editor "vim"
+
+# Install necessary packages and tools
+
+sudo apt-get update
+
+sudo apt-get install gcc gcc-multilib g++ g++-multilib
+sudo apt-get install htop
+sudo apt-get install make
+sudo apt-get install gnuplot
+sudo apt-get install texlive-font-utils
+
+echo "
+colorscheme peachpuff
+set mouse=a
+set ls=2
+set nu
+set ts=4
+set sw=4
+set et
+set ai
+set sts=4
+" > ~/.vimrc
+
+echo "
+export CBO=$HOME/cost-estimation
+alias clang
+" >> ~/.bashrc
+
+source ~/.bashrc
+

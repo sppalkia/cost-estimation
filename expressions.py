@@ -470,4 +470,7 @@ class Lookup(Expr):
         idxes = [loop[1] for loop in ctx["loops"]]
         self.sequential = is_sequential(self, idxes)
 
-        return 0.
+        childCost = 0.0
+        for c in self.children():
+            childCost += c.cost(ctx)
+        return childCost
