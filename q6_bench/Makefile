@@ -1,5 +1,5 @@
-CC=clang
-CFLAGS=-O0 -march=native
+CC=gcc
+CFLAGS=-O0 -march=native -std=c99
 EXEC=bench
 
 .PHONY: all clean

@@ -18,6 +18,11 @@
  *
  */
 
+#ifdef __linux__
+#define _BSD_SOURCE 500
+#define _POSIX_C_SOURCE 2
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -89,7 +94,9 @@ struct gen_data load_data(size_t vs,
     d.V = (int **)malloc(sizeof(int *) * vs);
     for (int i = 0; i < vs; i++) {
         d.V[i] = (int *)malloc(sizeof(int) * n);
-        memset_pattern4(d.V[i], &value, sizeof(int) * n);
+        for (int j = 0; j < n; j++) {
+            d.V[i][j] = value;
+        }
     }
 
     return d;

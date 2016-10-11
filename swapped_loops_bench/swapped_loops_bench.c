@@ -19,11 +19,17 @@
  *
  */
 
+#ifdef __linux__
+#define _BSD_SOURCE 500
+#define _POSIX_C_SOURCE 2
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/time.h>
+
 
 #define BLOCK_SIZE 1024
 
