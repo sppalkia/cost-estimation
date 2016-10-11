@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ -z "$CBO" ]; then
+    echo "Set CBO to root of this repo."
+    exit 1
+fi  
+
+
+# The root CBO directory
+RAW=$CBO/raw/kmeans_bench
+
+#rm -rf $RAW
+rm -f $CBO/plots/kmeans_bench_plot.pdf
+
+#mkdir -p $RAW
+
+#$CBO/kmeans_bench/test.sh > $RAW/raw.out
+$CBO/scripts/parse-kmeans-logs -i $RAW/raw.out -o $RAW/processed.out
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/kmeans_plot_p1 -x "k (Clusters)" -y "Time (in seconds)" -d $CBO/plots -c 8,9
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/kmeans_plot_p001 -x "k (Clusters)" -y "Time (in seconds)" -d $CBO/plots -c 6,7
