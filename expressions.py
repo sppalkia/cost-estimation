@@ -327,7 +327,7 @@ class If(Expr):
 
         # Get the smallest iteration distance. If it's sufficiently small, we
         # use it to amortize the branch prediction cost.
-        it_distance = min(sys.maxint, [iteration_distance(id_node, ctx["loops"]) for id_node in ids])
+        it_distance = min([iteration_distance(id_node, ctx["loops"]) for id_node in ids])
 
         if "selectivity" in ctx:
             old_s = ctx["selectivity"]
@@ -353,9 +353,10 @@ class If(Expr):
 
         # Picked this arbitrarily...
         if it_distance > 10:
+            print "Large iteration distance", it_distance
             branch_penalty = 0.0
         return condCost + p_true * trueCost + p_false * falseCost +\
-                branch_penalty * 5.0
+                branch_penalty * 3.0
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),
