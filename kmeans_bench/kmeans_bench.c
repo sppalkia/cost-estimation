@@ -16,7 +16,12 @@
 
 #include <sys/time.h>
 
-#define BS 16
+#define BS 32
+
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
 
 // Generated data parameters.
 struct gen_data {
@@ -203,10 +208,10 @@ int *k_means_blocked(struct gen_data *d) {
 
             // Find centroids for this block.
             for (int j = 0; j < k; j += BS) {
-                for (int ii = i; ii < i + BS; ii++) {
+                for (int ii = i; ii < min(i + BS, n); ii++) {
                     float *point = &data[ii*dim];
                     __builtin_prefetch(data + (ii+1)*dim);
-                    for (int jj = j; jj < j + BS; jj++) { 
+                    for (int jj = j; jj < min(j + BS, k); jj++) { 
                         // Find the closest cluster for the current point.
                         float distance = distance_btwn(point, &c[jj*dim], dim);
                         if (distance < min_distance[ii-i]) {

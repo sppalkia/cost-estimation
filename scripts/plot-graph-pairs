@@ -1,0 +1,120 @@
+#!/usr/bin/env python
+import argparse
+import subprocess
+
+
+"""Given a Gnuplot input file (produced by a parsing script that converts raw input
+   to the desired format expected by Gnuplot), and provided input command line args,
+   creates a plot of the data.
+
+   This is a variant of the standard plot-graphs file, where pairs of columns
+   are displayed using the same color (i.e., 0,2,4, etc. is red lines, 1,3,5, etc
+   is green lines).
+   
+   """
+
+def main(inputFile, outputFileTemplate, xLabel, yLabel, outputDir, colsToPlot, useXLog=False, useYLog=False):
+  # Read titles from header of input file
+  titles = None
+  with open(inputFile, 'r') as f:
+    titles = f.readline().strip("#").strip().split("\t")
+
+  # Create Gnuplot command to run, picking the provided column indices
+  colsToPlot = [int(colToPlot) for colToPlot in colsToPlot.split(",")]
+  plots = []
+  i = 2
+  for title in titles:
+    if (i-2) not in colsToPlot:
+      i += 1
+      continue
+    plots.append(
+      "\"%s\" using 1:%d with linespoints ls %d tit '%s'" % (
+        inputFile, i, i-1, title))
+    i += 1
+
+  outputFile = outputFileTemplate + ".eps"
+  gnuplotStr = """set terminal postscript eps color
+  set size 0.65
+  set output '%s'
+  set xlabel "%s"
+  set ylabel "%s"
+  """
+
+  if useXLog:
+    gnuplotStr += """
+    set logscale x
+    """
+
+  if useYLog:
+    gnuplotStr += """
+    set logscale y
+    """
+
+  gnuplotStr += """
+  set xtics border nomirror
+  set ytics border nomirror
+  set style fill empty
+  set grid
+
+  set key under
+  set key font ",8"
+  set key spacing 2
+
+  set style line 1 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 2 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 3 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 4 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 5 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 6 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 7 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 8 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 9 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 10 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 11 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 12 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 13 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 14 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+  set style line 15 lw 2 lt 1 lc rgb 'red' pt 7 ps 1;
+  set style line 16 lw 1 lt 9 lc rgb 'dark-green' pt 13 ps 1;
+
+  plot %s
+    """ 
+  
+  gnuplotStr = gnuplotStr % (outputFile, xLabel, yLabel, ", ".join(plots))
+
+  with open("plot.gnuplot", "w") as f:
+    f.write(gnuplotStr)
+
+  # Run Gnuplot command to produce graph, then cleanup un-needed temporary files
+  subprocess.call("gnuplot plot.gnuplot", shell=True)
+  subprocess.call("epstopdf %s" % outputFile, shell=True)
+  subprocess.call("rm %s" % outputFile, shell=True)
+  subprocess.call("mkdir -p %s; mv %s.pdf %s" % (outputDir, outputFileTemplate, outputDir), shell=True)
+  subprocess.call("rm plot.gnuplot", shell=True)
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(
+    description=("Produce plot of data dumped in provided data file")
+  )
+  parser.add_argument('-i', "--inputFile", required=True,
+    help="Name of file where data to be plotted resides")
+  parser.add_argument('-o', "--outputFileTemplate", required=True,
+    help="Output file template where data is to be plotted")
+  parser.add_argument('-x', "--xLabel", required=True,
+    help="Label associated with x-axis of graph")
+  parser.add_argument('-y', "--yLabel", required=True,
+    help="Label associated with y-axis of graph")
+  parser.add_argument('-d', "--outputDir", required=True,
+    help="Directory where *.pdf files need to be moved")
+  parser.add_argument('-c', "--colsToPlot", required=True,
+    help="Columns to plot")
+  parser.add_argument('-l', "--useXLog", required=False,
+    help="Use log scale for x axis", action='store_true')
+  parser.add_argument('-m', "--useYLog", required=False,
+    help="Use log scale for y axis", action='store_true')
+
+  cmdLineArgs = parser.parse_args()
+  optDict = vars(cmdLineArgs)
+
+  main(optDict["inputFile"], optDict["outputFileTemplate"], optDict["xLabel"],
+       optDict["yLabel"], optDict["outputDir"], optDict["colsToPlot"], optDict["useXLog"], optDict["useYLog"])
