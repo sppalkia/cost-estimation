@@ -32,9 +32,8 @@ TODO : Multi-core.
 from expressions import *
 from extended_cost_model import *
 
-def cost(expr, block_sizes=[], latencies=[]):
+def cost(expr, block_size=None, latencies=[]):
     # Return the cost of an expression.
-    # block_sizes and latencies parameters unused.
 
     # Only consider costs of loops.
     if not isinstance(expr, For):
@@ -51,12 +50,14 @@ def cost(expr, block_sizes=[], latencies=[]):
 
     # Memory throughput at different levels of the heirarchy (index 0 is L1 cache, etc.).
     memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
-    # Cache sizes in terms of blocks (cache size at level i in bytes = cache_size[i] * block_sizes[i]).
+    # Cache sizes in terms of blocks (cache size at level i in bytes = cache_size[i] * block_size).
     cache_sizes = [500, 4000, 62500]
     # Cache block (line) size at different levels of the memory heirarchy.
-    block_sizes = [64, 64, 64]
+    if block_size is None:
+        block_size = 64
     # Memory access latencies at different levels of the memory heirarchy.
-    latencies = [1, 7, 45, 100]
+    if latencies == []:
+        latencies = [1, 7, 45, 100]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
@@ -73,7 +74,7 @@ def cost(expr, block_sizes=[], latencies=[]):
     for l in lookups:
         print l.p_execute
         num_lookups = (l.loops * l.p_execute)
-        l_reuse_distance = reuse_distance(l, lookups, l.loops_seq)
+        l_reuse_distance = reuse_distance(l, lookups, l.loops_seq, block_size)
 
         if l.sequential:
             # Sequential access - use bandwidth.
@@ -89,9 +90,9 @@ def cost(expr, block_sizes=[], latencies=[]):
             rand_cost = 0.0
             vector_size = l.vector.length * l.elemSize
             prev_p = 0.0
-            for i in xrange(len(block_sizes)):
+            for i in xrange(len(cache_sizes)):
                 # Number of blocks in the vector.
-                blocks = vector_size / block_sizes[i]
+                blocks = vector_size / block_size
                 p = cache_sizes[i] / blocks
                 p = min(1.0, max(p, 0.0))
                 old_p = p

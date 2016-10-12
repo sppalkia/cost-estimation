@@ -21,7 +21,7 @@ evaluate to true or false), the first loop should have lower cost
 from expressions import *
 from cost_with_bandwidth import *
 
-block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
+block_size, latencies = 64, [1, 7, 45, 100]
 
 # Number of lookups
 num_lookups = 4
@@ -54,7 +54,7 @@ for v in [1, 5]:
         predicated_expr = For(iterations, Id("i"), 1, Multiply(condition, lookups))
 
         # Compute and Print Costs
-        c = cost(branched_loop, block_sizes, latencies)
+        c = cost(branched_loop, block_size, latencies)
         print_result("Branched", c)
-        c =  cost(predicated_expr, block_sizes, latencies)
+        c =  cost(predicated_expr, block_size, latencies)
         print_result("No Branch", c)

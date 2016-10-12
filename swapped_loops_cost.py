@@ -22,7 +22,7 @@ the more predictable branch.
 from expressions import *
 from cost_with_bandwidth import *
 
-block_sizes, latencies = [64, 64, 64], [1, 7, 45, 100]
+block_size, latencies = 64, [1, 7, 45, 100]
 
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
@@ -39,11 +39,11 @@ for k in [10, 100, 500, 800, 1000]:
     # The predicate is data dependent and unpredictable.
     inner_loop = For(n, Id("j"), 1, predicate)
     outer_loop = For(k, Id("i"), 1, inner_loop)
-    c = cost(outer_loop, block_sizes, latencies)
+    c = cost(outer_loop, block_size, latencies)
     print_result("Original", c)
 
     # Interchange the loops.
     inner_loop_2 = For(k, Id("i"), 1, predicate)
     outer_loop_2 = For(n, Id("j"), 1, inner_loop_2)
-    c = cost(outer_loop_2, block_sizes, latencies)
+    c = cost(outer_loop_2, block_size, latencies)
     print_result("Interchanged", c)
