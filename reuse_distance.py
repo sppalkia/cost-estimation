@@ -1,8 +1,6 @@
 # Computes reuse distances between two memory locations given
 # loop information.
 
-# TODO get this from the AST.
-ELEM_SIZE = 4.0
 
 def contains(lookup_idxs, loop_idx):
     # Determines if any of the lookup indices (specified by lookup_idxs)
@@ -45,7 +43,7 @@ def get_is_sequential(seen_loops, lookup_idxs):
                 return is_sequential
     return is_sequential
 
-def reuse_distance_to_self(lookup_idxs, loops, should_break=True):
+def reuse_distance_to_self(lookup_idxs, loops, num_elems_per_block, should_break=True):
     # Given a set of lookup ids and a sequence of loops, determines the number
     # of distinct blocks accessed in the passed-in array until the same element
     # is reached again.
@@ -67,13 +65,12 @@ def reuse_distance_to_self(lookup_idxs, loops, should_break=True):
 
     is_sequential = get_is_sequential(seen_loops, lookup_idxs)
     if is_sequential:
-        dist = int(dist * ELEM_SIZE / 64) + 1   # Each element is 4 bytes (integer) and each cache block
-                                                # is 64 bytes. Add 1 since int() rounds down.
+        dist = int(dist / num_elems_per_block) + 1   # Figure out distance in terms of number of blocks.
     else:
         dist = int(dist)
     return dist, seen_loops
 
-def reuse_distance_to_next(lookup_idxs, loops, should_break=True):
+def reuse_distance_to_next(lookup_idxs, loops, num_elems_per_block, should_break=True):
     # Given a set of lookup ids and a sequence of loops, determines the number
     # of distinct blocks accessed in the passed-in array until the _next_ element
     # is reached again.
@@ -96,13 +93,12 @@ def reuse_distance_to_next(lookup_idxs, loops, should_break=True):
 
     is_sequential = get_is_sequential(seen_loops, lookup_idxs)
     if is_sequential:
-        dist = int(dist * ELEM_SIZE / 64) + 1   # Each element is 4 bytes (integer) and each cache block
-                                                # is 64 bytes. Add 1 since int() rounds down.
+        dist = int(dist / num_elems_per_block) + 1   # Figure out distance in terms of number of blocks.
     else:
         dist = int(dist)
     return dist, seen_loops
 
-def reuse_distance(lookup, other_lookups, loops):
+def reuse_distance(lookup, other_lookups, loops, block_size):
     # Returns the number of memory accesses made before reusing the same
     # lookup.
     # For example, in the following loop:
@@ -124,33 +120,33 @@ def reuse_distance(lookup, other_lookups, loops):
     all_other_lookup_idxs = [other_lookup.index for other_lookup in other_lookups
                              if other_lookup.index != lookup.index]
 
+    num_elems_per_block = float(block_size / lookup.elemSize)
     # Determine number of accesses made to the same array before a particular
     # element is re-used.
-    dist, seen_loops = reuse_distance_to_self(lookup_idxs, reversed(loops))
+    dist, seen_loops = reuse_distance_to_self(lookup_idxs, reversed(loops), num_elems_per_block)
 
     # Determine number of accesses made to the other arrays before an element
     # in the original array is re-used.
     for other_lookup_idxs in all_other_lookup_idxs:
         other_dist, _ = reuse_distance_to_self(other_lookup_idxs, seen_loops,
-                                               should_break=False)
+                                               num_elems_per_block, should_break=False)
         dist += other_dist
 
-    # TODO: Make this dependent on parameter values (block sizes, ELEM_SIZE)
-    dist = dist / 16.  # Divide by 16 here, since only one element in every cache line
-                       # actually depends on the previous time the same element was re-used
-                       # to determine reuse-distance. All other elements in the same cache
-                       # line only depend on the previous element being accessed.
+    dist = dist / num_elems_per_block  # Divide by num_elems_per_block here, since only one
+                                       # element in every cache line actually depends on the
+                                       # previous time the same element was re-used to determine
+                                       # reuse-distance. All other elements in the same cache
+                                       # line only depend on the previous element being accessed.
 
-    dist_to_next, seen_loops = reuse_distance_to_next(lookup_idxs, reversed(loops))
+    dist_to_next, seen_loops = reuse_distance_to_next(lookup_idxs, reversed(loops), num_elems_per_block)
     for other_lookup_idxs in all_other_lookup_idxs:
         other_dist_to_next, _ = reuse_distance_to_next(other_lookup_idxs, seen_loops,
-                                                       should_break=False)
+                                                       num_elems_per_block, should_break=False)
         dist_to_next += other_dist_to_next
 
-    # 15 out of 16 elements depend on the number of distinct elements accessed since the
-    # previous element in the _same_ cache line is accessed.
-    # TODO: Make this dependent on parameter values (block sizes, ELEM_SIZE)
-    dist += (dist_to_next * (15. / 16.))
+    # All but one element in each cache block depend on the number of distinct elements
+    # accessed since the previous element in the _same_ cache line is accessed.
+    dist += (dist_to_next * ((num_elems_per_block - 1) / num_elems_per_block))
     dist = int(dist)
 
     return dist
