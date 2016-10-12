@@ -1,0 +1,21 @@
+----- 128 -----
+n=128, block_size=128
+Transposed: 0.015549 (result=5145231433)
+Unblocked: 0.016078 (result=5157316135)
+Blocked: 0.020287 (result=5124861558)
+n=256, block_size=128
+Transposed: 0.123560 (result=41096315596)
+Unblocked: 0.172599 (result=41074065986)
+Blocked: 0.166341 (result=41042980052)
+n=512, block_size=128
+Transposed: 1.015913 (result=328791255328)
+Unblocked: 1.665267 (result=328959099030)
+Blocked: 1.880787 (result=329150297158)
+n=1024, block_size=128
+Transposed: 7.898032 (result=2631289932673)
+Unblocked: 12.974537 (result=2632862456302)
+Blocked: 17.730236 (result=2629767592053)
+n=2048, block_size=128
+Transposed: 63.107448 (result=21059771373606)
+Unblocked: 101.376364 (result=21046469740624)
+Blocked: 137.213236 (result=21061700874711)

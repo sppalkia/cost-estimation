@@ -1,0 +1,100 @@
+----- 10 -----
+k=10, n=10000
+Original: 0.000832 (result=3710880)
+Interchanged: 0.000335 (result=3708820)
+----- 100 -----
+k=100, n=10000
+Original: 0.007982 (result=37108800)
+Interchanged: 0.002938 (result=37088200)
+----- 500 -----
+k=500, n=10000
+Original: 0.039174 (result=185544000)
+Interchanged: 0.013982 (result=185441000)
+----- 800 -----
+k=800, n=10000
+Original: 0.062281 (result=296870400)
+Interchanged: 0.022257 (result=296705600)
+----- 1000 -----
+k=1000, n=10000
+Original: 0.077214 (result=371088000)
+Interchanged: 0.027782 (result=370882000)
+----- 10 -----
+k=10, n=10000
+Original: 0.000857 (result=3710880)
+Interchanged: 0.000335 (result=3708820)
+----- 100 -----
+k=100, n=10000
+Original: 0.007962 (result=37108800)
+Interchanged: 0.002945 (result=37088200)
+----- 500 -----
+k=500, n=10000
+Original: 0.039020 (result=185544000)
+Interchanged: 0.013981 (result=185441000)
+----- 800 -----
+k=800, n=10000
+Original: 0.062015 (result=296870400)
+Interchanged: 0.022254 (result=296705600)
+----- 1000 -----
+k=1000, n=10000
+Original: 0.077542 (result=371088000)
+Interchanged: 0.027777 (result=370882000)
+----- 10 -----
+k=10, n=10000
+Original: 0.000835 (result=3710880)
+Interchanged: 0.000335 (result=3708820)
+----- 100 -----
+k=100, n=10000
+Original: 0.007974 (result=37108800)
+Interchanged: 0.002946 (result=37088200)
+----- 500 -----
+k=500, n=10000
+Original: 0.039039 (result=185544000)
+Interchanged: 0.013982 (result=185441000)
+----- 800 -----
+k=800, n=10000
+Original: 0.062081 (result=296870400)
+Interchanged: 0.022259 (result=296705600)
+----- 1000 -----
+k=1000, n=10000
+Original: 0.077658 (result=371088000)
+Interchanged: 0.027782 (result=370882000)
+----- 10 -----
+k=10, n=10000
+Original: 0.000839 (result=3710880)
+Interchanged: 0.000336 (result=3708820)
+----- 100 -----
+k=100, n=10000
+Original: 0.007947 (result=37108800)
+Interchanged: 0.002945 (result=37088200)
+----- 500 -----
+k=500, n=10000
+Original: 0.039134 (result=185544000)
+Interchanged: 0.013976 (result=185441000)
+----- 800 -----
+k=800, n=10000
+Original: 0.062317 (result=296870400)
+Interchanged: 0.022260 (result=296705600)
+----- 1000 -----
+k=1000, n=10000
+Original: 0.077183 (result=371088000)
+Interchanged: 0.027776 (result=370882000)
+----- 10 -----
+k=10, n=10000
+Original: 0.000838 (result=3710880)
+Interchanged: 0.000335 (result=3708820)
+----- 100 -----
+k=100, n=10000
+Original: 0.008022 (result=37108800)
+Interchanged: 0.002929 (result=37088200)
+----- 500 -----
+k=500, n=10000
+Original: 0.038940 (result=185544000)
+Interchanged: 0.013979 (result=185441000)
+----- 800 -----
+k=800, n=10000
+Original: 0.062033 (result=296870400)
+Interchanged: 0.022266 (result=296705600)
+----- 1000 -----
+k=1000, n=10000
+Original: 0.077660 (result=371088000)
+Interchanged: 0.027782 (result=370882000)

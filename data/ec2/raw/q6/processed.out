@@ -1,0 +1,8 @@
+#	Number of Vs=1 (Branched)	Number of Vs=1 (Not branched)	Number of Vs=5 (Branched)	Number of Vs=5 (Not branched)
+0.01 0.19 0.33 0.22 1.00
+0.10 0.23 0.33 0.33 1.00
+0.25 0.36 0.33 0.54 1.00
+0.50 0.53 0.33 0.88 1.00
+0.75 0.40 0.33 0.92 1.00
+0.90 0.33 0.33 0.94 1.00
+1.00 0.28 0.33 0.96 1.00
