@@ -42,7 +42,7 @@ struct gen_data {
  */
 float distance_btwn(float *a, float *b, int dim) {
     float distance = 0;
-    // TODO fix.
+    // TODO fix - eliminated exponent for faster experiments for now.
     for (int j = dim; j-- > 0; distance += b[j] - a[j]);
     return distance;
 }
