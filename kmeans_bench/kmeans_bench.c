@@ -16,7 +16,10 @@
 
 #include <sys/time.h>
 
-#define BS 32
+#define BS 16
+
+// Changes the width.
+typedef double FLOAT;
 
 #define min(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -25,11 +28,11 @@
 
 // Generated data parameters.
 struct gen_data {
-    float *data;
-    int n;
-    int m;
-    int k;
-    int iters;
+    FLOAT *data;
+    int n;          // Number of points.
+    int m;          // Dimension of points.
+    int k;          // Number of clusters.
+    int iters;      // Iterations to run.
 };
 
 /** Finds the distance between two vectors a and b with dim elements each.
@@ -40,8 +43,8 @@ struct gen_data {
  *
  * @return the euclidian distance between the two vectors.
  */
-float distance_btwn(float *a, float *b, int dim) {
-    float distance = 0;
+FLOAT distance_btwn(FLOAT *a, FLOAT *b, int dim) {
+    FLOAT distance = 0;
     // TODO fix - eliminated exponent for faster experiments for now.
     for (int j = dim; j-- > 0; distance += b[j] - a[j]);
     return distance;
@@ -58,7 +61,7 @@ float distance_btwn(float *a, float *b, int dim) {
  */
 int *k_means(struct gen_data *d) {
 
-    float *data = d->data;
+    FLOAT *data = d->data;
     int n = d->n;
     int dim = d->m;
     int k = d->k;
@@ -69,9 +72,9 @@ int *k_means(struct gen_data *d) {
     // Size of each cluster.
     int *counts = (int *)calloc(k, sizeof(int));
     // Centroids.
-    float *c = (float *)calloc(k * dim, sizeof(float));
+    FLOAT *c = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
     // Temporary centroids.
-    float *c1 = (float *)calloc(k * dim, sizeof(float));
+    FLOAT *c1 = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
 
     // For timing.
     struct timeval start, end, diff;
@@ -95,15 +98,15 @@ int *k_means(struct gen_data *d) {
     while (iterations != 0) {
         // Clear old counts and temp centroids.
         memset(counts, 0, sizeof(int) * k);
-        memset(c1, 0, sizeof(float) * dim * k);
+        memset(c1, 0, sizeof(FLOAT) * dim * k);
 
         for (int i = 0; i < n; i++) {
-            float *point = &data[i*dim];
+            FLOAT *point = &data[i*dim];
 
             // Find the closest cluster for the current point.
-            float min_distance = DBL_MAX;
+            FLOAT min_distance = DBL_MAX;
             for (int j = 0; j < k; j++) {
-                float distance = distance_btwn(point, &c[j*dim], dim);
+                FLOAT distance = distance_btwn(point, &c[j*dim], dim);
                 if (distance < min_distance) {
                     labels[i] = j;
                     min_distance = distance;
@@ -111,7 +114,7 @@ int *k_means(struct gen_data *d) {
             }
 
             int label = labels[i];
-            float *cent = &c1[label*dim];
+            FLOAT *cent = &c1[label*dim];
             for (int j = 0; j < dim; j++) {
                 cent[j] += point[j];
             }
@@ -140,6 +143,15 @@ int *k_means(struct gen_data *d) {
             (long) diff.tv_sec, (long) diff.tv_usec,
             labels[0]);
 
+    // Make Parsing a bit easier but keep above line for backwards
+    // compatibility with plotting script
+    // Line Format:
+    // Blocked >> n,m,k,i,time,result
+    printf(">>> S: %d,%d,%d,%d,%ld.%06ld,%d\n",
+            d->n, d->m, d->k, d->iters,
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            labels[0]);
+
     // Cleanup.
     free(c);
     free(c1);
@@ -160,7 +172,7 @@ int *k_means(struct gen_data *d) {
  */
 int *k_means_blocked(struct gen_data *d) {
 
-    float *data = d->data;
+    FLOAT *data = d->data;
     int n = d->n;
     int dim = d->m;
     int k = d->k;
@@ -171,9 +183,9 @@ int *k_means_blocked(struct gen_data *d) {
     // Size of each cluster.
     int *counts = (int *)calloc(k, sizeof(int));
     // Centroids.
-    float *c = (float *)calloc(k * dim, sizeof(float));
+    FLOAT *c = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
     // Temporary centroids.
-    float *c1 = (float *)calloc(k * dim, sizeof(float));
+    FLOAT *c1 = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
 
     // For timing.
     struct timeval start, end, diff;
@@ -197,27 +209,26 @@ int *k_means_blocked(struct gen_data *d) {
     while (iterations != 0) {
         // Clear old counts and temp centroids.
         memset(counts, 0, sizeof(int) * k);
-        memset(c1, 0, sizeof(float) * dim * k);
+        memset(c1, 0, sizeof(FLOAT) * dim * k);
 
         for (int i = 0; i < n; i += BS) {
             // Set the min_distances for this block.
-            float min_distance[BS];
+            FLOAT min_distance[BS];
             for (int q = 0; q < BS; q++) {
                 min_distance[q] = DBL_MAX;
             }
 
+            int end = min(i + BS, n);
+
             // Find centroids for this block.
-            for (int j = 0; j < k; j += BS) {
-                for (int ii = i; ii < min(i + BS, n); ii++) {
-                    float *point = &data[ii*dim];
-                    __builtin_prefetch(data + (ii+1)*dim);
-                    for (int jj = j; jj < min(j + BS, k); jj++) { 
-                        // Find the closest cluster for the current point.
-                        float distance = distance_btwn(point, &c[jj*dim], dim);
-                        if (distance < min_distance[ii-i]) {
-                            labels[ii] = jj;
-                            min_distance[ii-i] = distance;
-                        }
+            for (int j = 0; j < k; j++) {
+                FLOAT *cent = &c[j*dim];
+                for (int ii = i; ii < end; ii++) {
+                    // Find the closest cluster for the current point.
+                    FLOAT distance = distance_btwn(&data[ii*dim], cent, dim);
+                    if (distance < min_distance[ii-i]) {
+                        labels[ii] = j;
+                        min_distance[ii-i] = distance;
                     }
                 }
             }
@@ -225,8 +236,8 @@ int *k_means_blocked(struct gen_data *d) {
             // Update the temporary centroids for this batch.
             for (int ii = i; ii < i + BS; ii++) {
                 int label = labels[ii];
-                float *point = &data[ii*dim];
-                float *cent = &c1[label*dim];
+                FLOAT *point = &data[ii*dim];
+                FLOAT *cent = &c1[label*dim];
                 for (int j = 0; j < dim; j++) {
                     cent[j] += point[j];
                 }
@@ -256,6 +267,15 @@ int *k_means_blocked(struct gen_data *d) {
             (long) diff.tv_sec, (long) diff.tv_usec,
             labels[0]);
 
+    // Make Parsing a bit easier but keep above line for backwards
+    // compatibility with plotting script
+    // Line Format:
+    // Blocked >> n,m,k,i,time,result
+    printf(">>> B: %d,%d,%d,%d,%ld.%06ld,%d\n",
+            d->n, d->m, d->k, d->iters,
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            labels[0]);
+
     // Cleanup.
     free(c);
     free(c1);
@@ -278,9 +298,9 @@ struct gen_data generate_data(int n, int m, int k, int iters) {
     d.iters = iters;
 
     // Generate random data.
-    d.data = (float *)malloc(sizeof(float) * n * m);
+    d.data = (FLOAT *)malloc(sizeof(FLOAT) * n * m);
     for (int i = 0; i < n; i++) {
-        float seed = random();
+        FLOAT seed = random();
         for (int j = 0; j < m; j++) {
             d.data[i*m + j] = seed + j;
         }

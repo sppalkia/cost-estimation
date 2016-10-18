@@ -8,7 +8,7 @@ ifeq ($(UNAME_S),Linux)
     CC=gcc -fopenmp
 endif
 
-CFLAGS=-O0 -march=native -std=c99
+CFLAGS=-O1 -march=native -std=c99
 EXEC=bench
 
 .PHONY: all clean
