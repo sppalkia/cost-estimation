@@ -30,3 +30,6 @@ def membandwidth(n, m, k, i, time):
     # Iterations
     mem *= i
     return mem / time
+
+print to_gbps(membandwidth(65536, 1024, 4096, 1, 121.516))
+print to_gbps(membandwidth(65536, 1024, 4096, 1, 92.33))

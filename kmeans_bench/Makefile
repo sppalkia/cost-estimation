@@ -1,4 +1,4 @@
-CC=clang
+CC=gcc-6 -fopenmp -std=c99
 CFLAGS=-O3 -march=native
 EXEC=bench
 
