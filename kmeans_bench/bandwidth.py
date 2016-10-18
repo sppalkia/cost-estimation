@@ -3,9 +3,17 @@ SIZEOF_INT = 4.
 SIZEOF_FLT = 8.
 
 def to_gbps(bw):
+    """
+    Convert bytes / sec to Gigabits/sec.
+    """
     return (bw * 8) / 10E9
 
 def membandwidth(n, m, k, i, time):
+    """
+    Computes the memory bandwidth for the k-means
+    algorithm given n (points), m (dimension), k (centers),
+    i (number of iterations), and the runtime in seconds.
+    """
     mem = 0.
     # Reset counts
     mem += SIZEOF_INT * k
