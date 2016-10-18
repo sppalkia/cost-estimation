@@ -63,8 +63,8 @@ def main(inputFile, outputFile):
     for k in ks:
       f.write("%d" % k)
       for m in ms:
-        f.write(" %.2f" % (sum(unblockedTimes[n][m][k]) / len(unblockedTimes[n][m][k])))
-        f.write(" %.2f" % (sum(blockedTimes[n][m][k]) / len(blockedTimes[n][m][k])))
+        f.write(" %.6f" % (sum(unblockedTimes[n][m][k]) / len(unblockedTimes[n][m][k])))
+        f.write(" %.6f" % (sum(blockedTimes[n][m][k]) / len(blockedTimes[n][m][k])))
       f.write("\n")
 
 if __name__ == '__main__':

@@ -1,4 +1,13 @@
-CC=gcc -fopenmp -std=c99
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+    CC=gcc-6 -fopenmp -std=c99
+endif
+
+ifeq ($(UNAME_S),Linux)
+    CC=gcc -fopenmp
+endif
+
 CFLAGS=-O3 -march=native
 EXEC=bench
 
