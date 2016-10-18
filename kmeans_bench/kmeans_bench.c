@@ -5,6 +5,13 @@
  * See README for original license.
  */
 
+#ifdef __linux__
+#undef _BSD_SOURCE 
+#define _BSD_SOURCE 500
+#undef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 2
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -19,7 +26,7 @@
 #include <omp.h>
 
 #define BS 32
-#define THREADS 4
+#define THREADS 8
 
 // Changes the width.
 typedef double FLOAT;
