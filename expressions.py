@@ -5,8 +5,7 @@ import math
 from reuse_distance import *
 import sys
 
-# Number of cores used in a multicore system.
-CORES = 4
+import params
 
 class Expr:
     # Root expression class
@@ -126,11 +125,11 @@ class VecMergerMerge(Expr):
         if self.globalTable:
             elems = self.lookup.vector.length
             # Probability of contention = access prob. 
-            p_contend = 1.0 - pow((1.0 - (1.0 / elems)), CORES)
+            p_contend = 1.0 - pow((1.0 - (1.0 / elems)), params.CORES)
             # We give some (high) fixed cost for an atomic instruction,
             # and a large penalty in case there's contention. Contention probability
             # is the probability that two cores update the same element at once.
-            m *= (3 + (10 * p_contend))
+            m *= (params.ATOMICADD_LATENCY + (params.ATOMICADD_PENALTY * p_contend))
         return l + m
 
     def __str__(self):
@@ -227,7 +226,7 @@ class BinaryExpr(Expr):
 
         lhsCost = self.left.cost(ctx)
         rhsCost = self.right.cost(ctx)
-        return lhsCost + rhsCost + 1.
+        return lhsCost + rhsCost + params.BINOP_LATENCY 
 
 # Basic Binary expressions, whose cost is computed as being
 # the costs of the LHS and RHS expressions + 1 for the
@@ -347,16 +346,11 @@ class If(Expr):
         ctx["selectivity"] = old_s
         self.p_execute = ctx["selectivity"]
 
-        # A penalty for branch mispredicts. Closer to 0 (no penalty) when
-        # selectivities are predictable, i.e. closer to 0 or 1.
-        branch_penalty = -1. * pow(self.selectivity * 2. - 1., 2.) + 1.
-
         # Picked this arbitrarily...
-        if it_distance > 10:
-            print "Large iteration distance", it_distance
+        branch_penalty = params.BRANCH_MISPREDICT_PENALTY(self.selectivity)
+        if it_distance > params.BRANCHPRED_PREDICTABLE_IT_DIST:
             branch_penalty = 0.0
-        return condCost + p_true * trueCost + p_false * falseCost +\
-                branch_penalty * 3.0
+        return condCost + p_true * trueCost + p_false * falseCost + branch_penalty
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),

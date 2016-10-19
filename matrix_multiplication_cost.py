@@ -23,8 +23,6 @@ version, for sufficiently large N.
 from expressions import *
 from cost_with_bandwidth import *
 
-block_size, latencies = 64, [1, 7, 45, 100]
-
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
@@ -39,7 +37,7 @@ for b in [128]:
                                              Lookup("B", [Id("j"), Id("k")]))))
     j_loop = For(n, Id("j"), 1, k_loop)
     i_loop = For(n, Id("i"), 1, j_loop)
-    c = cost(i_loop, block_size, latencies)
+    c = cost(i_loop)
     print_result("Transposed", c)
 
     # Loop 1 (unblocked).
@@ -48,7 +46,7 @@ for b in [128]:
                                              Lookup("B", [Id("k"), Id("j")]))))
     j_loop = For(n, Id("j"), 1, k_loop)
     i_loop = For(n, Id("i"), 1, j_loop)
-    c = cost(i_loop, block_size, latencies)
+    c = cost(i_loop)
     print_result("Unblocked", c)
 
     # Loop 2 (blocked).
@@ -59,5 +57,5 @@ for b in [128]:
     i_loop = For(n, Id("i"), 1, j_loop)
     jj_loop = For(n, Id("jj"), b, i_loop)
     kk_loop = For(n, Id("kk"), b, jj_loop)
-    c = cost(kk_loop, block_size, latencies)
+    c = cost(kk_loop)
     print_result("Blocked", c)

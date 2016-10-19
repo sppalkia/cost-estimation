@@ -32,7 +32,9 @@ TODO : Multi-core.
 from expressions import *
 from extended_cost_model import *
 
-def cost(expr, block_size=None, latencies=[]):
+import params
+
+def cost(expr):
     # Return the cost of an expression.
 
     # Only consider costs of loops.
@@ -46,18 +48,17 @@ def cost(expr, block_size=None, latencies=[]):
     p_cost = expr.cost({})
 
     # CPU clock frequency.
-    clock_frequency = (2. * 10**9)
+    clock_frequency = params.CLOCK_FREQUENCY
 
     # Memory throughput at different levels of the heirarchy (index 0 is L1 cache, etc.).
-    memory_throughput = [(128. * 10**9), (64. * 10**9), (32. * 10**9), (4. * 10**9)]
+    memory_throughput = [params.L1_THROUGHPUT, params.L2_THROUGHPUT, params.L3_THROUGHPUT, params.MEM_THROUGHPUT] 
     # Cache sizes in terms of blocks (cache size at level i in bytes = cache_size[i] * block_size).
-    cache_sizes = [500, 4000, 62500]
+    cache_sizes = [params.L1_SIZE, params.L2_SIZE, params.L3_SIZE]
+
     # Cache block (line) size at different levels of the memory heirarchy.
-    if block_size is None:
-        block_size = 64
+    block_size = params.CACHE_LINE_SIZE
     # Memory access latencies at different levels of the memory heirarchy.
-    if latencies == []:
-        latencies = [1, 7, 45, 100]
+    latencies = [params.L1_LATENCY, params.L2_LATENCY, params.L3_LATENCY, params.MEM_LATENCY]
 
     def _get_lookups(expr, lookups=set()):
         # Find Lookup (i.e. memory access) nodes in the expression tree.
