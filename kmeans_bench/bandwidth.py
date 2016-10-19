@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 SIZEOF_INT = 4.
 SIZEOF_FLT = 8.
@@ -31,5 +32,19 @@ def membandwidth(n, m, k, i, time):
     mem *= i
     return mem / time
 
-print to_gbps(membandwidth(65536, 1024, 4096, 1, 121.516))
-print to_gbps(membandwidth(65536, 1024, 4096, 1, 92.33))
+def parse_file(fn):
+    with open(fn) as f:
+        for line in f:
+            if ">>>" in line:
+                blocked, tokens = line.split(":")
+                n, m, k, i, time, _ = [float(x) for x in tokens.strip().split(",")]
+                bw = to_gbps(membandwidth(n, m, k, i, time))
+                print "{6}, n={0}, m={1}, k={2}, i={3}, time={4}, bw={5}".format(
+                        n, m, k, i, time, bw, blocked)
+
+import os
+
+if __name__=="__main__":
+    cbo = os.environ["CBO"]
+    filename = cbo + "/raw/kmeans_bench/raw.out"
+    parse_file(filename)

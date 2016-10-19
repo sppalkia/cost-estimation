@@ -25,11 +25,17 @@
 
 #include <omp.h>
 
-#define BS 32
-#define THREADS 8
+#define BS 4000
+#define THREADS 4
 
 // Changes the width.
-typedef double FLOAT;
+typedef float FLOAT;
+
+const int n = 500 * 1000;
+const int dim = 2;
+const int k = 500 * 1000;
+const int b = 1000;
+const int iters = 1;
 
 #define min(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -56,7 +62,9 @@ struct gen_data {
 FLOAT distance_btwn(FLOAT *a, FLOAT *b, int dim) {
     FLOAT distance = 0;
     // TODO fix - eliminated exponent for faster experiments for now.
-    for (int j = dim; j-- > 0; distance += b[j] - a[j]);
+    for (int j = 0; j < dim; j++) {
+        distance += b[j] - a[j];
+    }
     return distance;
 }
 
@@ -69,16 +77,16 @@ FLOAT distance_btwn(FLOAT *a, FLOAT *b, int dim) {
  * @return the labels assigned to the data points d->data. labels[i]
  * denotes the label of d->data[i].
  */
-int *k_means(struct gen_data *d) {
+void k_means(struct gen_data *d) {
 
     FLOAT *data = d->data;
+    /*
     int n = d->n;
     int dim = d->m;
     int k = d->k;
     int iterations = d->iters;
+    */
 
-    // Output cluster labels for each point.
-    int *labels = (int *)calloc(n, sizeof(int));
     // Centroids.
     FLOAT *c = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
 
@@ -98,7 +106,7 @@ int *k_means(struct gen_data *d) {
     struct timeval start, end, diff;
 
     // Sanity checks.
-    assert(data && k > 0 && dim > 0 && iterations >= 0);
+    assert(data && k > 0 && dim > 0 && iters >= 0);
 
     // Initialize.
     // Indexes into data to choose initialization points.
@@ -113,7 +121,7 @@ int *k_means(struct gen_data *d) {
     // Begin timing after iterations.
     gettimeofday(&start, 0);
 
-    while (iterations != 0) {
+    for (int iter = 0; iter < iters; iter++) {
 
         #pragma omp parallel for
         for (int t = 0; t < THREADS; t++) {  
@@ -132,18 +140,16 @@ int *k_means(struct gen_data *d) {
 
             for (int i = nstart; i < nend; i++) {
                 FLOAT *point = &data[i*dim];
-
-                // Find the closest cluster for the current point.
                 FLOAT min_distance = DBL_MAX;
+                int label = 0;
                 for (int j = 0; j < k; j++) {
                     FLOAT distance = distance_btwn(point, &c[j*dim], dim);
                     if (distance < min_distance) {
-                        labels[i] = j;
+                        label = j;
                         min_distance = distance;
                     }
                 }
 
-                int label = labels[i];
                 FLOAT *cent = &c1[label*dim];
                 for (int j = 0; j < dim; j++) {
                     cent[j] += point[j];
@@ -162,20 +168,17 @@ int *k_means(struct gen_data *d) {
                 for (int j = 0; j < dim; j++) {
                     total_c1[i*dim + j] += all_c1[t][i*dim + j];
                 }
+            }
 
-                // Update the actual centroids.
-                for (int j = 0; j < dim; j++) {
-                    if (total_counts[i] > 0) {
-                        c[i*dim + j] = total_c1[i*dim +j] / total_counts[i];
-                    } else {
-                        c[i*dim+j] = total_c1[i*dim+j];
-                    }
+            // Update the actual centroids.
+            for (int j = 0; j < dim; j++) {
+                if (total_counts[i] > 0) {
+                    c[i*dim + j] = total_c1[i*dim +j] / total_counts[i];
+                } else {
+                    c[i*dim+j] = total_c1[i*dim+j];
                 }
-
             }
         }
-        // Update iterations.
-        iterations--;
     }
 
     // Finish timing.
@@ -183,7 +186,7 @@ int *k_means(struct gen_data *d) {
     timersub(&end, &start, &diff);
     printf("Standard: %ld.%06ld (result=%d)\n",
             (long) diff.tv_sec, (long) diff.tv_usec,
-            labels[0]);
+            c[0]);
 
     // Make Parsing a bit easier but keep above line for backwards
     // compatibility with plotting script
@@ -192,7 +195,7 @@ int *k_means(struct gen_data *d) {
     printf(">>> S: %d,%d,%d,%d,%ld.%06ld,%d\n",
             d->n, d->m, d->k, d->iters,
             (long) diff.tv_sec, (long) diff.tv_usec,
-            labels[0]);
+            c[0]);
 
     // Cleanup.
     free(c);
@@ -202,20 +205,18 @@ int *k_means(struct gen_data *d) {
     }
     free(all_c1);
     free(all_counts);
-
-    return labels;
 }
 
 int *k_means_blocked(struct gen_data *d) {
 
     FLOAT *data = d->data;
+    /*
     int n = d->n;
     int dim = d->m;
     int k = d->k;
     int iterations = d->iters;
+    */
 
-    // Output cluster labels for each point.
-    int *labels = (int *)calloc(n, sizeof(int));
     // Centroids.
     FLOAT *c = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
 
@@ -235,7 +236,7 @@ int *k_means_blocked(struct gen_data *d) {
     struct timeval start, end, diff;
 
     // Sanity checks.
-    assert(data && k > 0 && dim > 0 && iterations >= 0);
+    assert(data && k > 0 && dim > 0 && iters >= 0);
 
     // Initialize.
     // Indexes into data to choose initialization points.
@@ -250,7 +251,7 @@ int *k_means_blocked(struct gen_data *d) {
     // Begin timing after iterations.
     gettimeofday(&start, 0);
 
-    while (iterations != 0) {
+    for (int iter = 0; iter < iters; iter++) {
 
         #pragma omp parallel for
         for (int t = 0; t < THREADS; t++) {  
@@ -270,8 +271,10 @@ int *k_means_blocked(struct gen_data *d) {
             for (int i = nstart; i < nend; i += BS) {
                 // Set the min_distances for this block.
                 FLOAT min_distance[BS];
+                int labels[BS];
                 for (int q = 0; q < BS; q++) {
                     min_distance[q] = DBL_MAX;
+                    labels[q] = 0;
                 }
 
                 int end = min(i + BS, n);
@@ -283,15 +286,15 @@ int *k_means_blocked(struct gen_data *d) {
                         // Find the closest cluster for the current point.
                         FLOAT distance = distance_btwn(&data[ii*dim], cent, dim);
                         if (distance < min_distance[ii-i]) {
-                            labels[ii] = j;
+                            labels[ii-i] = j;
                             min_distance[ii-i] = distance;
                         }
                     }
                 }
 
                 // Update the temporary centroids for this batch.
-                for (int ii = i; ii < i + BS; ii++) {
-                    int label = labels[ii];
+                for (int ii = i; ii < end; ii++) {
+                    int label = labels[ii-i];
                     FLOAT *point = &data[ii*dim];
                     FLOAT *cent = &c1[label*dim];
                     for (int j = 0; j < dim; j++) {
@@ -313,20 +316,17 @@ int *k_means_blocked(struct gen_data *d) {
                 for (int j = 0; j < dim; j++) {
                     total_c1[i*dim + j] += all_c1[t][i*dim + j];
                 }
+            }
 
-                // Update the actual centroids.
-                for (int j = 0; j < dim; j++) {
-                    if (total_counts[i] > 0) {
-                        c[i*dim + j] = total_c1[i*dim +j] / total_counts[i];
-                    } else {
-                        c[i*dim+j] = total_c1[i*dim+j];
-                    }
+            // Update the actual centroids.
+            for (int j = 0; j < dim; j++) {
+                if (total_counts[i] > 0) {
+                    c[i*dim + j] = total_c1[i*dim +j] / total_counts[i];
+                } else {
+                    c[i*dim+j] = total_c1[i*dim+j];
                 }
-
             }
         }
-        // Update iterations.
-        iterations--;
     }
 
     // Finish timing.
@@ -334,7 +334,7 @@ int *k_means_blocked(struct gen_data *d) {
     timersub(&end, &start, &diff);
     printf("Blocked: %ld.%06ld (result=%d)\n",
             (long) diff.tv_sec, (long) diff.tv_usec,
-            labels[0]);
+            c[0]);
 
     // Make Parsing a bit easier but keep above line for backwards
     // compatibility with plotting script
@@ -343,7 +343,7 @@ int *k_means_blocked(struct gen_data *d) {
     printf(">>> B: %d,%d,%d,%d,%ld.%06ld,%d\n",
             d->n, d->m, d->k, d->iters,
             (long) diff.tv_sec, (long) diff.tv_usec,
-            labels[0]);
+            c[0]);
 
     // Cleanup.
     free(c);
@@ -353,137 +353,7 @@ int *k_means_blocked(struct gen_data *d) {
     }
     free(all_c1);
     free(all_counts);
-
-    return labels;
 }
-
-#if 0
-
-/** Runs the kmeans clustering algorithm on the given input data.
- * This function prints the runtime at the end of execution, not
- * counting initialization time/cleanup. This variant blocks points
- * and centroids in the cache.
- *
- * @param d the input parameters.
- *
- * @return the labels assigned to the data points d->data. labels[i]
- * denotes the label of d->data[i].
- */
-int *k_means_blocked(struct gen_data *d) {
-
-    FLOAT *data = d->data;
-    int n = d->n;
-    int dim = d->m;
-    int k = d->k;
-    int iterations = d->iters;
-
-    // Output cluster labels for each point.
-    int *labels = (int *)calloc(n, sizeof(int));
-    // Size of each cluster.
-    int *counts = (int *)calloc(k, sizeof(int));
-    // Centroids.
-    FLOAT *c = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
-    // Temporary centroids.
-    FLOAT *c1 = (FLOAT *)calloc(k * dim, sizeof(FLOAT));
-
-    // For timing.
-    struct timeval start, end, diff;
-
-    // Sanity checks.
-    assert(data && k > 0 && dim > 0 && iterations >= 0);
-
-    // Initialize.
-    // Indexes into data to choose initialization points.
-    int h = 0;
-    for (int i = 0; i < k; i++) {
-        for (int j = 0; j < dim; j++) {
-            c[i*dim + j] = data[h*dim + j];
-        }
-        h += n / k;
-    }
-
-    // Begin timing after iterations.
-    gettimeofday(&start, 0);
-
-    while (iterations != 0) {
-        // Clear old counts and temp centroids.
-        memset(counts, 0, sizeof(int) * k);
-        memset(c1, 0, sizeof(FLOAT) * dim * k);
-
-        for (int i = 0; i < n; i += BS) {
-            // Set the min_distances for this block.
-            FLOAT min_distance[BS];
-            for (int q = 0; q < BS; q++) {
-                min_distance[q] = DBL_MAX;
-            }
-
-            int end = min(i + BS, n);
-
-            // Find centroids for this block.
-            for (int j = 0; j < k; j++) {
-                FLOAT *cent = &c[j*dim];
-                for (int ii = i; ii < end; ii++) {
-                    // Find the closest cluster for the current point.
-                    FLOAT distance = distance_btwn(&data[ii*dim], cent, dim);
-                    if (distance < min_distance[ii-i]) {
-                        labels[ii] = j;
-                        min_distance[ii-i] = distance;
-                    }
-                }
-            }
-
-            // Update the temporary centroids for this batch.
-            for (int ii = i; ii < i + BS; ii++) {
-                int label = labels[ii];
-                FLOAT *point = &data[ii*dim];
-                FLOAT *cent = &c1[label*dim];
-                for (int j = 0; j < dim; j++) {
-                    cent[j] += point[j];
-                }
-                counts[label]++;
-            }
-        }
-
-        // Update all centroids.
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < dim; j++) {
-                if (counts[i] > 0) {
-                    c[i*dim + j] = c1[i*dim +j] / counts[i];
-                } else {
-                    c[i*dim+j] = c1[i*dim+j];
-                }
-            }
-        }
-
-        // Update iterations.
-        iterations--;
-    }
-
-    // Finish timing.
-    gettimeofday(&end, 0);
-    timersub(&end, &start, &diff);
-    printf("Blocked: %ld.%06ld (result=%d)\n",
-            (long) diff.tv_sec, (long) diff.tv_usec,
-            labels[0]);
-
-    // Make Parsing a bit easier but keep above line for backwards
-    // compatibility with plotting script
-    // Line Format:
-    // Blocked >> n,m,k,i,time,result
-    printf(">>> B: %d,%d,%d,%d,%ld.%06ld,%d\n",
-            d->n, d->m, d->k, d->iters,
-            (long) diff.tv_sec, (long) diff.tv_usec,
-            labels[0]);
-
-    // Cleanup.
-    free(c);
-    free(c1);
-    free(counts);
-
-    return labels;
-}
-
-#endif
 
 /** Generates input data for the k-means test.
  *
@@ -498,6 +368,10 @@ struct gen_data generate_data(int n, int m, int k, int iters) {
     d.k = k;
     d.iters = iters;
 
+    printf("Generating data (%.1lf MB)...\n",
+            n * m * sizeof(FLOAT) / 1024.0 / 1024.0
+            );
+
     // Generate random data.
     d.data = (FLOAT *)malloc(sizeof(FLOAT) * n * m);
     for (int i = 0; i < n; i++) {
@@ -506,14 +380,18 @@ struct gen_data generate_data(int n, int m, int k, int iters) {
             d.data[i*m + j] = seed + j;
         }
     }
+
+    printf("Done generating data\n");
+
     return d;
 }
 
 int main(int argc, char **argv) {
     // Default values.
-    size_t n = 8192;
-    int m = 1024;
-    int k = 4096;
+    /*
+    size_t n = 60 * 1000;
+    int m = 2;
+    int k = 60 * 1000;
     int iters = 1;
 
     int ch;
@@ -537,16 +415,17 @@ int main(int argc, char **argv) {
                 exit(1);
         }
     }
+    */
 
     // Sanity checks.
     assert(n > 0);
-    assert(m > 0);
+    assert(dim > 0);
     assert(k > 0);
     assert(iters > 0);
 
-    printf("n=%zu, m=%d, k=%d, iters=%d\n", n, m, k, iters);
+    printf("n=%zu, m=%d, k=%d, iters=%d\n", n, dim, k, iters);
 
-    struct gen_data d = generate_data(n, m, k, iters);
+    struct gen_data d = generate_data(n, dim, k, iters);
 
     // Standard k-means.
     k_means(&d);
