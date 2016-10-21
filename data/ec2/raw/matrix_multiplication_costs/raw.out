@@ -3,7 +3,7 @@ n=128, block_size=128
 1.0
 1.0
 1.0
-Transposed: 4718592.0
+Transposed: 4587520.0
 1.0
 1.0
 1.0
@@ -16,7 +16,7 @@ n=256, block_size=128
 1.0
 1.0
 1.0
-Transposed: 39845888.0
+Transposed: 36700160.0
 1.0
 1.0
 1.0
@@ -29,7 +29,7 @@ n=512, block_size=128
 1.0
 1.0
 1.0
-Transposed: 318767104.0
+Transposed: 301989888.0
 1.0
 1.0
 1.0
@@ -42,7 +42,7 @@ n=1024, block_size=128
 1.0
 1.0
 1.0
-Transposed: 4429185024.0
+Transposed: 2550136832.0
 1.0
 1.0
 1.0
@@ -55,7 +55,7 @@ n=2048, block_size=128
 1.0
 1.0
 1.0
-Transposed: 35433480192.0
+Transposed: 20401094656.0
 1.0
 1.0
 1.0
