@@ -2,6 +2,13 @@
 
 # ************************* System/CPU Parameters  *************************
 
+"""
+Instructions (Linux):
+
+    Cores: lscpu
+    Clock Frequency: lscpu
+"""
+
 # Number of CPU cores.
 CORES = 4
 
@@ -11,17 +18,25 @@ CLOCK_FREQUENCY = 2E9
 
 # ************************* Memory Parameters  *************************
 
+"""
+Instructions (Linux):
+
+    L1, L2, L3 Cache Size: lscpu, divide by line size
+    Clock Frequency: lscpu
+    Cache Line Size: cat /proc/cpuinfo, read the clflush size field
+"""
+
 # Memory throughput at different levels of the heirarchy (index 0 is L1 cache,
 # etc.).
-L1_THROUGHPUT   = 128E9
-L2_THROUGHPUT   = 64E9
-L3_THROUGHPUT   = 32E9
-MEM_THROUGHPUT  = 4E9
+L1_THROUGHPUT   = 529E9
+L2_THROUGHPUT   = 350E9
+L3_THROUGHPUT   = 120E9
+MEM_THROUGHPUT  = 55E9
 
 # Cache sizes in *blocks/lines*
 L1_SIZE         = 500
 L2_SIZE         = 4000
-L3_SIZE         = 62500
+L3_SIZE         = 720000 
 
 # Cache line size in bytes.
 CACHE_LINE_SIZE = 64
@@ -40,7 +55,7 @@ BINOP_LATENCY = 1
 # Latency of an atomic add with no contention.
 ATOMICADD_LATENCY = 3
 # Penalty of contention for an atomic add.
-ATOMICADD_PENALTY = 10
+ATOMICADD_PENALTY = 100
 
 # Given a constant condition, The number of branches fall a certain way for the
 # branch predictor to predict it correctly subsequently.

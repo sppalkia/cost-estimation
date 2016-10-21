@@ -92,7 +92,7 @@ class VecMergerResult(Expr):
             return 10000
         else:
             # We run the run procedure on each partial table.
-            return self.vecMergerSize * self.mergeCost
+            return self.vecMergerSize * self.mergeCost * params.CORES
 
 class VecMergerMerge(Expr):
     # Represents a merge into a VecMerger.

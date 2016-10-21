@@ -51,7 +51,7 @@ def cost(expr):
     clock_frequency = params.CLOCK_FREQUENCY
 
     # Memory throughput at different levels of the heirarchy (index 0 is L1 cache, etc.).
-    memory_throughput = [params.L1_THROUGHPUT, params.L2_THROUGHPUT, params.L3_THROUGHPUT, params.MEM_THROUGHPUT] 
+    memory_throughput = [params.L1_THROUGHPUT, params.L2_THROUGHPUT, params.L3_THROUGHPUT, params.MEM_THROUGHPUT]
     # Cache sizes in terms of blocks (cache size at level i in bytes = cache_size[i] * block_size).
     cache_sizes = [params.L1_SIZE, params.L2_SIZE, params.L3_SIZE]
 
@@ -94,6 +94,8 @@ def cost(expr):
             for i in xrange(len(cache_sizes)):
                 # Number of blocks in the vector.
                 blocks = vector_size / block_size
+                if i == len(cache_sizes) - 1:
+                    blocks *= params.CORES
                 p = cache_sizes[i] / blocks
                 p = min(1.0, max(p, 0.0))
                 old_p = p

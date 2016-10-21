@@ -25,7 +25,7 @@ Things to model that are new:
 from expressions import *
 from cost_with_bandwidth import cost
 
-CORES = 4
+import params
 
 # An ID referring to the struct at the current loop index.
 lineId = Id("line")
@@ -44,7 +44,7 @@ def print_result(name, value):
 
 def costForQuery(b, p, iterations, globalTable):
 
-    iterations = iterations / CORES
+    iterations = iterations / params.CORES
 
     mergeExpr = StructLiteral([
             Add(GetField(lineId, 0), GetField(builderId, 0)),
@@ -56,7 +56,7 @@ def costForQuery(b, p, iterations, globalTable):
             ])
 
     # (line.4 > n)
-    vecMergerSize = b * CORES if not globalTable else b
+    vecMergerSize = b * params.CORES if not globalTable else b
     condition = GreaterThan(GetField(lineId, 4), Literal())
     branch = If(condition, VecMergerMerge(Vector("B", vecMergerSize), mergeIndex, mergeExpr, BUCKET_SIZE, globalTable), Literal())
     # Set the selectivity of the branch.
@@ -67,7 +67,6 @@ def costForQuery(b, p, iterations, globalTable):
     expr = For(iterations, Id("i"), 1, loopBody)
 
     c = cost(expr)
-    print c
 
     if globalTable:
         label = "Global"
@@ -79,15 +78,20 @@ def costForQuery(b, p, iterations, globalTable):
         # merging of the global tables. This is also slightly broken because
         # the  fixed cost of merging the results isn't 1...it's much higher
         # than that.
-        result = For(b, Id("r"), 1, Add(Lookup("br", Id("r"), BUCKET_SIZE), FixedCostExpr(12)))
-        resCost = cost(result) * (CORES + 1)
-        print resCost
+        result = For(b, Id("r"), 1, Add(Lookup("br", Id("r"), BUCKET_SIZE),
+            mergeExpr))
+        resCost = cost(result) * params.CORES
+        # The below produces the "correct" resulting plot but 
+        """
+        if b * BUCKET_SIZE  > params.L3_SIZE * params.CACHE_LINE_SIZE:
+            resCost *= 2.5
+        """
 
     print_result(label, c + resCost)
 
-for b in [10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000]:
+for b in [int(x) for x in [1e2, 1e3, 1e4, 1e5, 1e6,1e7, 1e8]]:
     print "----- {0} -----".format(b)
-    for p in [0.01, 0.1, 0.5, 0.75, 1.0]:
+    for p in [1.0]:
         print "n={0}, b={1}, p={2}".format(iterations, b, p)
         # The merge expression loads the value in the builder for each struct field and
         # adds it to a new value generated during this loop iteration.
