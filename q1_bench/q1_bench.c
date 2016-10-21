@@ -274,6 +274,12 @@ int main(int argc, char **argv) {
             (long) diff.tv_sec, (long) diff.tv_usec,
             d.buckets[0].count, d.buckets[0].sum_charge);
 
+    // For easy parsing
+    printf(">>> Local(result=%d %d):%ld.%06ld\t%d\t%d\t%f\n",
+            d.buckets[0].count, d.buckets[0].sum_charge,
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            num_items, num_buckets, prob);
+
     // Reset the buckets.
     memset(d.buckets, 0, sizeof(struct q1_entry) * d.num_buckets);
 
@@ -284,6 +290,12 @@ int main(int argc, char **argv) {
     printf("Global: %ld.%06ld (result=%d %d)\n",
             (long) diff.tv_sec, (long) diff.tv_usec,
             d.buckets[0].count, d.buckets[0].sum_charge);
+
+    // For easy parsing
+    printf(">>> Global(result=%d %d):%ld.%06ld\t%d\t%d\t%f\n",
+            d.buckets[0].count, d.buckets[0].sum_charge,
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            num_items, num_buckets, prob);
 
     return 0;
 }
