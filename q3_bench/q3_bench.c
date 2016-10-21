@@ -39,33 +39,50 @@ struct q3_entry {
 struct gen_data {
     // Number of lineitems in the table.
     int32_t num_items;
+    // Number of orders in the table.
+    int32_t num_orders;
+    // Number of customers in the table.
+    int32_t num_customers;
+
     // Number of num_buckets/size of the hash table.
     int32_t num_buckets;
     // Probability that the branch in the query will be taken.
     float prob;
-    // The input data.
-    struct lineitem *items;
+    // Pointers to the input data.
+    struct lineitems *items;
+    struct orders *orders;
+    struct customers *customers;
     // The num_buckets. This is a shared hash table across all threads.
     // Unused if using local bucket strategy.
     struct q3_entry *buckets;
 };
 
-// An input data item represented as in a row format.
-struct lineitem {
+// An input data item represented as in a column format.
+struct lineitems {
     // The Q3 bucket this lineitem is clustered in.
-    int32_t bucket;
+    int32_t* bucket;
 
     // The branch condition (either PASS or FAIL).
-    int32_t shipdate;
+    int32_t* shipdate;
 
     // Various fields used in the query.
-    int32_t quantity;
-    int32_t extendedprice;
-    int32_t discount;
-    int32_t tax;
+    int32_t* orderkey;
+    int32_t* quantity;
+    int32_t* extendedprice;
+    int32_t* discount;
+    int32_t* tax;
+};
 
-    // So the structure is 1/2 a cache line exactly.
-    long _pad;
+struct orders {
+    int32_t* orderkey;
+    int32_t* custkey;
+    int32_t* orderdate;
+    int32_t* orderpriority;
+    int32_t* shippriority;
+};
+
+struct customers {
+    int32_t* mktsegment;
 };
 
 /** Runs a worker for the query with a global shared hash table.
@@ -75,22 +92,34 @@ struct lineitem {
  * @param d the input data.
  * @param tid the thread ID of this worker.
  */
-void run_query_global_table_helper(struct gen_data *d, int tid) {
+int32_t run_query_global_table_helper(struct gen_data *d, int tid) {
     unsigned start = (d->num_items / NUM_PARALLEL_THREADS) * tid;
     unsigned end = start + (d->num_items / NUM_PARALLEL_THREADS);
     if (end > d->num_items || tid == NUM_PARALLEL_THREADS - 1) {
         end = d->num_items;
     }
+    int32_t result = 0;
+
+    struct lineitems *items = d->items;
+    struct orders *orders = d->orders;
+    struct customers *customers = d->customers;
     for (int i = start; i < end; i++) {
-        struct lineitem *item = &d->items[i];
-        if (item->shipdate == PASS) {
-            int bucket = item->bucket;
+        int32_t order_idx = items->orderkey[i];
+        int32_t customer_idx = orders->custkey[order_idx];
+        int32_t orderdate = orders->orderdate[order_idx];
+        int32_t mktsegment = customers->mktsegment[customer_idx];
+        int32_t shipdate = items->shipdate[i];
+
+        result += (orderdate + mktsegment);
+        if (items->shipdate[i] == PASS) {
+            int bucket = items->bucket[i];
             struct q3_entry *e = &d->buckets[bucket];
 #pragma omp atomic
             e->revenue +=
-                (item->extendedprice * (1 - item->discount));
+                (items->extendedprice[i] * (1 - items->discount[i]));
         }
     }
+    return result;
 }
 
 /** Runs a worker for the query with thread-local hash tables.
@@ -99,21 +128,32 @@ void run_query_global_table_helper(struct gen_data *d, int tid) {
  * @param buckets the local buckets this worker writes into.
  * @param tid the thread ID of this worker.
  */
-void run_query_local_table_helper(struct gen_data *d, struct q3_entry *buckets, int tid) {
+int32_t run_query_local_table_helper(struct gen_data *d, struct q3_entry *buckets, int tid) {
     unsigned start = (d->num_items / NUM_PARALLEL_THREADS) * tid;
     unsigned end = start + (d->num_items / NUM_PARALLEL_THREADS);
     if (end > d->num_items || tid == NUM_PARALLEL_THREADS - 1) {
         end = d->num_items;
     }
+    int32_t result = 0;
 
+    struct lineitems *items = d->items;
+    struct orders *orders = d->orders;
+    struct customers *customers = d->customers;
     for (int i = start; i < end; i++) {
-        struct lineitem *item = &d->items[i];
-        if (item->shipdate == PASS) {
-            int bucket = item->bucket;
+        int32_t order_idx = items->orderkey[i];
+        int32_t customer_idx = orders->custkey[order_idx];
+        int32_t orderdate = orders->orderdate[order_idx];
+        int32_t mktsegment = customers->mktsegment[customer_idx];
+        int32_t shipdate = items->shipdate[i];
+        result += (orderdate + mktsegment);
+
+        if (items->shipdate[i] == PASS) {
+            int bucket = items->bucket[i];
             struct q3_entry *e = &buckets[bucket];
-            e->revenue += (item->extendedprice * (1 - item->discount));
+            e->revenue += (items->extendedprice[i] * (1 - items->discount[i]));
         }
     }
+    return result;
 }
 
 /** Runs a the query with a global shared hash table.
@@ -166,34 +206,69 @@ void run_query_local_table(struct gen_data *d) {
  * @param prob the selectivity of the branch.
  * @return the generated data in a structure.
  */
-struct gen_data generate_data(int num_items, int num_buckets, float prob) {
+struct gen_data generate_data(int num_items, int num_orders, int num_customers, int num_buckets, float prob) {
     struct gen_data d;
 
     d.num_items = num_items;
+    d.num_orders = num_orders;
+    d.num_customers = num_customers;
+
     d.num_buckets = num_buckets;
     d.prob = prob;
 
-    d.items = (struct lineitem *)malloc(sizeof(struct lineitem) * num_items);
+    d.items = (struct lineitems *)malloc(sizeof(struct lineitems));
+    d.orders = (struct orders *)malloc(sizeof(struct orders));
+    d.customers = (struct customers *)malloc(sizeof(struct customers));
     d.buckets = (struct q3_entry *)malloc(sizeof(struct q3_entry) * num_buckets);
 
     int pass_thres = (int)(prob * 100.0);
+    struct lineitems *items = d.items;
+    items->shipdate = (int32_t *)malloc(sizeof(int32_t) * num_items);
+    items->orderkey = (int32_t *)malloc(sizeof(int32_t) * num_items);
+    items->quantity = (int32_t *)malloc(sizeof(int32_t) * num_items);
+    items->extendedprice = (int32_t *)malloc(sizeof(int32_t) * num_items);
+    items->discount = (int32_t *)malloc(sizeof(int32_t) * num_items);
+    items->tax = (int32_t *)malloc(sizeof(int32_t) * num_items);
+    items->bucket = (int32_t *)malloc(sizeof(int32_t) * num_items);
     for (int i = 0; i < d.num_items; i++) {
-        struct lineitem *item = &d.items[i];
         if (random() % 100 <= pass_thres) {
-            item->shipdate = PASS;
+            items->shipdate[i] = PASS;
         } else {
-            item->shipdate = 0;
+            items->shipdate[i] = 0;
         }
 
         int seed = random();
 
         // Random values.
-        item->quantity = seed;
-        item->extendedprice = seed + 1;
-        item->discount = seed + 2;
-        item->tax = seed + 3;
+        items->quantity[i] = seed;
+        items->extendedprice[i] = seed + 1;
+        items->discount[i] = seed + 2;
+        items->tax[i] = seed + 3;
 
-        item->bucket = random() % num_buckets;
+        items->bucket[i] = random() % num_buckets;
+    }
+
+    struct orders *orders = d.orders;
+    orders->orderkey = (int32_t *)malloc(sizeof(int32_t) * num_orders);
+    orders->custkey = (int32_t *)malloc(sizeof(int32_t) * num_orders);
+    orders->orderdate = (int32_t *)malloc(sizeof(int32_t) * num_orders);
+    orders->orderpriority = (int32_t *)malloc(sizeof(int32_t) * num_orders);
+    orders->shippriority = (int32_t *)malloc(sizeof(int32_t) * num_orders);
+
+    for (int i = 0; i < d.num_orders; i++) {
+        int seed = random();
+        orders->orderkey[i] = random() % d.num_orders;
+        orders->custkey[i] = random() % d.num_customers;
+        orders->orderdate[i] = seed + 2;
+        orders->orderpriority[i] = seed + 3;
+        orders->shippriority[i] = seed + 4;
+    }
+
+    struct customers *customers = d.customers;
+    customers->mktsegment = (int32_t *)malloc(sizeof(int32_t) * num_customers);
+    for (int i = 0; i < d.num_customers; i++) {
+        int seed = random();
+        customers->mktsegment[i] = seed;
     }
 
     // 0 out the num_buckets.
@@ -207,17 +282,25 @@ int main(int argc, char **argv) {
     int num_buckets = 6;
     // Number of elements in array (should be >> cache size);
     int num_items = (1E8 / sizeof(int));
+    int num_orders = (1E5 / sizeof(int));
+    int num_customers = (1E4 / sizeof(int));
     // Approx. PASS probability.
     float prob = 0.01;
 
     int ch;
-    while ((ch = getopt(argc, argv, "b:n:p:")) != -1) {
+    while ((ch = getopt(argc, argv, "b:n:o:c:p:")) != -1) {
         switch (ch) {
             case 'b':
                 num_buckets = atoi(optarg);
                 break;
             case 'n':
                 num_items = atoi(optarg);
+                break;
+            case 'o':
+                num_orders = atoi(optarg);
+                break;
+            case 'c':
+                num_customers = atoi(optarg);
                 break;
             case 'p':
                 prob = atof(optarg);
@@ -237,7 +320,7 @@ int main(int argc, char **argv) {
 
     printf("n=%d, b=%d, p=%f\n", num_items, num_buckets, prob);
 
-    struct gen_data d = generate_data(num_items, num_buckets, prob);
+    struct gen_data d = generate_data(num_items, num_orders, num_customers, num_buckets, prob);
     long sum;
     struct timeval start, end, diff;
 

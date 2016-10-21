@@ -27,13 +27,15 @@ from cost_with_bandwidth import cost
 
 CORES = 4
 
-# An ID referring to the struct at the current loop index.
-lineId = Id("line")
+
+# Vectors of order records.
+customer_idxs = Vector("customer_idxs", 25000)
+orderdates = Vector("orderdates", 25000)
+# Vectors of customer records.
+mktsegments = Vector("mktsegments", 2500)
+
 # An ID referring to the struct at the desired builder index.
 builderId = Id("b")
-
-# line.5 * X + line.6
-mergeIndex = GetField(lineId, 0)
 
 iterations = 2.5e8
 
@@ -43,23 +45,35 @@ def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
 def costForQuery(b, p, iterations, globalTable):
-
     iterations = iterations / CORES
+    loopVar = Id("i")
+
+    # Vectors of line items.
+    order_idxs = Vector("order_idxs", iterations)
+    shipdates = Vector("shipdates", iterations)
+    extendedprices = Vector("extendedprices", iterations)
+    discounts = Vector("discounts", iterations)
+    buckets = Vector("buckets", iterations)
 
     mergeExpr = StructLiteral([
-            Add(Multiply(GetField(lineId, 1), Subtract(Literal(), GetField(lineId, 2))), GetField(builderId, 0)),
+            Add(Multiply(Lookup(extendedprices, loopVar), Subtract(Literal(), Lookup(discounts, loopVar))), GetField(builderId, 0)),
             ])
 
     # (line.4 > n)
+    mergeIndex = Lookup(buckets, loopVar)
     vecMergerSize = b * CORES if not globalTable else b
-    condition = GreaterThan(GetField(lineId, 4), Literal())
+    condition = GreaterThan(Id("shipdate"), Literal())
     branch = If(condition, VecMergerMerge(Vector("B", vecMergerSize), mergeIndex, mergeExpr, BUCKET_SIZE, globalTable), Literal())
+    shipdateLet = Let(Id("shipdate"), Lookup(shipdates, loopVar), branch)
+    mktsegmentLet = Let(Id("mktsegment"), Lookup(mktsegments, Id("customer_idx")), shipdateLet)
+    orderdateLet = Let(Id("orderdate"), Lookup(orderdates, Id("order_idx")), mktsegmentLet)
+    customeridxLet = Let(Id("customer_idx"), Lookup(customer_idxs, Id("order_idx")), orderdateLet)
+    loopBody = Let(Id("order_idx"), Lookup(order_idxs, loopVar), customeridxLet)
+
     # Set the selectivity of the branch.
     branch.selectivity = p
-    loopVar = Id("i")
     # Construct the loop body - use Let statements to get the structs into variables.
-    loopBody = Let(lineId, Lookup("V", loopVar, BUCKET_SIZE), branch)
-    expr = For(iterations, Id("i"), 1, loopBody)
+    expr = For(iterations, loopVar, 1, loopBody)
 
     c = cost(expr)
     print c
