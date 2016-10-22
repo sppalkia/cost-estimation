@@ -44,8 +44,8 @@ CACHE_LINE_SIZE = 64
 # Memory Latencies
 L1_LATENCY = 1
 L2_LATENCY = 7
-L3_LATENCY = 45
-MEM_LATENCY = 100
+L3_LATENCY = 19
+MEM_LATENCY = 36
 
 # ************************* Instruction Parameters *************************
 
@@ -53,9 +53,9 @@ MEM_LATENCY = 100
 BINOP_LATENCY = 1
 
 # Latency of an atomic add with no contention.
-ATOMICADD_LATENCY = 3
+ATOMICADD_LATENCY = 10
 # Penalty of contention for an atomic add.
-ATOMICADD_PENALTY = 100
+ATOMICADD_PENALTY = 10
 
 # Given a constant condition, The number of branches fall a certain way for the
 # branch predictor to predict it correctly subsequently.
