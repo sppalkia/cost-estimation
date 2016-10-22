@@ -1,220 +1,220 @@
 ----- 1 -----
 vs=1, sel=0.010000
-Branched: 0.089929 (result=250205)
-No Branch: 0.153114 (result=250205)
+Branched: 0.084518 (result=250205)
+No Branch: 0.143494 (result=250205)
 vs=1, sel=0.100000
-Branched: 0.110013 (result=2748034)
-No Branch: 0.153147 (result=2748034)
+Branched: 0.107707 (result=2748034)
+No Branch: 0.143390 (result=2748034)
 vs=1, sel=0.250000
-Branched: 0.170857 (result=6495762)
-No Branch: 0.153085 (result=6495762)
+Branched: 0.165467 (result=6495762)
+No Branch: 0.143895 (result=6495762)
 vs=1, sel=0.500000
-Branched: 0.250934 (result=12746266)
-No Branch: 0.153010 (result=12746266)
+Branched: 0.250959 (result=12746266)
+No Branch: 0.143623 (result=12746266)
 vs=1, sel=0.750000
-Branched: 0.190009 (result=18996698)
-No Branch: 0.153059 (result=18996698)
+Branched: 0.189210 (result=18996698)
+No Branch: 0.143546 (result=18996698)
 vs=1, sel=0.900000
-Branched: 0.155623 (result=22497969)
-No Branch: 0.153076 (result=22497969)
+Branched: 0.153810 (result=22497969)
+No Branch: 0.143758 (result=22497969)
 vs=1, sel=1.000000
-Branched: 0.133001 (result=25000000)
-No Branch: 0.152956 (result=25000000)
+Branched: 0.131190 (result=25000000)
+No Branch: 0.143550 (result=25000000)
 ----- 5 -----
 vs=5, sel=0.010000
-Branched: 0.102516 (result=1251025)
-No Branch: 0.469630 (result=1251025)
+Branched: 0.096049 (result=1251025)
+No Branch: 0.461196 (result=1251025)
 vs=5, sel=0.100000
-Branched: 0.152807 (result=13740170)
-No Branch: 0.471200 (result=13740170)
+Branched: 0.152760 (result=13740170)
+No Branch: 0.461947 (result=13740170)
 vs=5, sel=0.250000
-Branched: 0.255352 (result=32478810)
-No Branch: 0.469613 (result=32478810)
+Branched: 0.254903 (result=32478810)
+No Branch: 0.461818 (result=32478810)
 vs=5, sel=0.500000
-Branched: 0.414297 (result=63731330)
-No Branch: 0.469435 (result=63731330)
+Branched: 0.409980 (result=63731330)
+No Branch: 0.464691 (result=63731330)
 vs=5, sel=0.750000
-Branched: 0.433021 (result=94983490)
-No Branch: 0.469091 (result=94983490)
+Branched: 0.425968 (result=94983490)
+No Branch: 0.461169 (result=94983490)
 vs=5, sel=0.900000
-Branched: 0.442199 (result=112489845)
-No Branch: 0.469651 (result=112489845)
+Branched: 0.433315 (result=112489845)
+No Branch: 0.461613 (result=112489845)
 vs=5, sel=1.000000
-Branched: 0.450762 (result=125000000)
-No Branch: 0.468741 (result=125000000)
+Branched: 0.441714 (result=125000000)
+No Branch: 0.462664 (result=125000000)
 ----- 1 -----
 vs=1, sel=0.010000
-Branched: 0.089699 (result=250205)
-No Branch: 0.153123 (result=250205)
+Branched: 0.085115 (result=250205)
+No Branch: 0.143684 (result=250205)
 vs=1, sel=0.100000
-Branched: 0.109896 (result=2748034)
-No Branch: 0.153281 (result=2748034)
+Branched: 0.107443 (result=2748034)
+No Branch: 0.143844 (result=2748034)
 vs=1, sel=0.250000
-Branched: 0.170613 (result=6495762)
-No Branch: 0.153175 (result=6495762)
+Branched: 0.165915 (result=6495762)
+No Branch: 0.144083 (result=6495762)
 vs=1, sel=0.500000
-Branched: 0.252087 (result=12746266)
-No Branch: 0.152896 (result=12746266)
+Branched: 0.250254 (result=12746266)
+No Branch: 0.144160 (result=12746266)
 vs=1, sel=0.750000
-Branched: 0.190070 (result=18996698)
-No Branch: 0.152962 (result=18996698)
+Branched: 0.189355 (result=18996698)
+No Branch: 0.144400 (result=18996698)
 vs=1, sel=0.900000
-Branched: 0.155457 (result=22497969)
-No Branch: 0.153116 (result=22497969)
+Branched: 0.153521 (result=22497969)
+No Branch: 0.143580 (result=22497969)
 vs=1, sel=1.000000
-Branched: 0.133037 (result=25000000)
-No Branch: 0.153033 (result=25000000)
+Branched: 0.131193 (result=25000000)
+No Branch: 0.143467 (result=25000000)
 ----- 5 -----
 vs=5, sel=0.010000
-Branched: 0.102163 (result=1251025)
-No Branch: 0.468615 (result=1251025)
+Branched: 0.095166 (result=1251025)
+No Branch: 0.459833 (result=1251025)
 vs=5, sel=0.100000
-Branched: 0.152660 (result=13740170)
-No Branch: 0.469611 (result=13740170)
+Branched: 0.152143 (result=13740170)
+No Branch: 0.460008 (result=13740170)
 vs=5, sel=0.250000
-Branched: 0.255247 (result=32478810)
-No Branch: 0.470846 (result=32478810)
+Branched: 0.254637 (result=32478810)
+No Branch: 0.459478 (result=32478810)
 vs=5, sel=0.500000
-Branched: 0.414193 (result=63731330)
-No Branch: 0.468171 (result=63731330)
+Branched: 0.408706 (result=63731330)
+No Branch: 0.461424 (result=63731330)
 vs=5, sel=0.750000
-Branched: 0.432805 (result=94983490)
-No Branch: 0.468767 (result=94983490)
+Branched: 0.426237 (result=94983490)
+No Branch: 0.461362 (result=94983490)
 vs=5, sel=0.900000
-Branched: 0.443126 (result=112489845)
-No Branch: 0.470436 (result=112489845)
+Branched: 0.434672 (result=112489845)
+No Branch: 0.460624 (result=112489845)
 vs=5, sel=1.000000
-Branched: 0.450578 (result=125000000)
-No Branch: 0.469642 (result=125000000)
+Branched: 0.440182 (result=125000000)
+No Branch: 0.460240 (result=125000000)
 ----- 1 -----
 vs=1, sel=0.010000
-Branched: 0.089548 (result=250205)
-No Branch: 0.153063 (result=250205)
+Branched: 0.084529 (result=250205)
+No Branch: 0.143453 (result=250205)
 vs=1, sel=0.100000
-Branched: 0.109982 (result=2748034)
-No Branch: 0.153097 (result=2748034)
+Branched: 0.107266 (result=2748034)
+No Branch: 0.145034 (result=2748034)
 vs=1, sel=0.250000
-Branched: 0.170817 (result=6495762)
-No Branch: 0.153199 (result=6495762)
+Branched: 0.165034 (result=6495762)
+No Branch: 0.143353 (result=6495762)
 vs=1, sel=0.500000
-Branched: 0.251222 (result=12746266)
-No Branch: 0.154491 (result=12746266)
+Branched: 0.249973 (result=12746266)
+No Branch: 0.143474 (result=12746266)
 vs=1, sel=0.750000
-Branched: 0.190331 (result=18996698)
-No Branch: 0.153191 (result=18996698)
+Branched: 0.189082 (result=18996698)
+No Branch: 0.143434 (result=18996698)
 vs=1, sel=0.900000
-Branched: 0.155494 (result=22497969)
-No Branch: 0.153110 (result=22497969)
+Branched: 0.153864 (result=22497969)
+No Branch: 0.143472 (result=22497969)
 vs=1, sel=1.000000
-Branched: 0.133210 (result=25000000)
-No Branch: 0.153395 (result=25000000)
+Branched: 0.131088 (result=25000000)
+No Branch: 0.143500 (result=25000000)
 ----- 5 -----
 vs=5, sel=0.010000
-Branched: 0.101576 (result=1251025)
-No Branch: 0.470139 (result=1251025)
+Branched: 0.094984 (result=1251025)
+No Branch: 0.462828 (result=1251025)
 vs=5, sel=0.100000
-Branched: 0.152668 (result=13740170)
-No Branch: 0.469709 (result=13740170)
+Branched: 0.150663 (result=13740170)
+No Branch: 0.459615 (result=13740170)
 vs=5, sel=0.250000
-Branched: 0.255458 (result=32478810)
-No Branch: 0.469500 (result=32478810)
+Branched: 0.253919 (result=32478810)
+No Branch: 0.458986 (result=32478810)
 vs=5, sel=0.500000
-Branched: 0.413317 (result=63731330)
-No Branch: 0.468466 (result=63731330)
+Branched: 0.408233 (result=63731330)
+No Branch: 0.460196 (result=63731330)
 vs=5, sel=0.750000
-Branched: 0.433295 (result=94983490)
-No Branch: 0.469231 (result=94983490)
+Branched: 0.424820 (result=94983490)
+No Branch: 0.458982 (result=94983490)
 vs=5, sel=0.900000
-Branched: 0.442122 (result=112489845)
-No Branch: 0.469539 (result=112489845)
+Branched: 0.432288 (result=112489845)
+No Branch: 0.459300 (result=112489845)
 vs=5, sel=1.000000
-Branched: 0.449634 (result=125000000)
-No Branch: 0.468583 (result=125000000)
+Branched: 0.439765 (result=125000000)
+No Branch: 0.459300 (result=125000000)
 ----- 1 -----
 vs=1, sel=0.010000
-Branched: 0.089838 (result=250205)
-No Branch: 0.153365 (result=250205)
+Branched: 0.083992 (result=250205)
+No Branch: 0.143353 (result=250205)
 vs=1, sel=0.100000
-Branched: 0.110020 (result=2748034)
-No Branch: 0.153085 (result=2748034)
+Branched: 0.107272 (result=2748034)
+No Branch: 0.143434 (result=2748034)
 vs=1, sel=0.250000
-Branched: 0.170487 (result=6495762)
-No Branch: 0.153307 (result=6495762)
+Branched: 0.164842 (result=6495762)
+No Branch: 0.143236 (result=6495762)
 vs=1, sel=0.500000
-Branched: 0.251371 (result=12746266)
-No Branch: 0.153190 (result=12746266)
+Branched: 0.250432 (result=12746266)
+No Branch: 0.143348 (result=12746266)
 vs=1, sel=0.750000
-Branched: 0.190094 (result=18996698)
-No Branch: 0.152957 (result=18996698)
+Branched: 0.189050 (result=18996698)
+No Branch: 0.143487 (result=18996698)
 vs=1, sel=0.900000
-Branched: 0.155483 (result=22497969)
-No Branch: 0.153170 (result=22497969)
+Branched: 0.153689 (result=22497969)
+No Branch: 0.143407 (result=22497969)
 vs=1, sel=1.000000
-Branched: 0.133101 (result=25000000)
-No Branch: 0.152976 (result=25000000)
+Branched: 0.131070 (result=25000000)
+No Branch: 0.143646 (result=25000000)
 ----- 5 -----
 vs=5, sel=0.010000
-Branched: 0.101733 (result=1251025)
-No Branch: 0.469042 (result=1251025)
+Branched: 0.094266 (result=1251025)
+No Branch: 0.459272 (result=1251025)
 vs=5, sel=0.100000
-Branched: 0.152614 (result=13740170)
-No Branch: 0.468748 (result=13740170)
+Branched: 0.150891 (result=13740170)
+No Branch: 0.459058 (result=13740170)
 vs=5, sel=0.250000
-Branched: 0.255371 (result=32478810)
-No Branch: 0.468547 (result=32478810)
+Branched: 0.253947 (result=32478810)
+No Branch: 0.459643 (result=32478810)
 vs=5, sel=0.500000
-Branched: 0.414177 (result=63731330)
-No Branch: 0.468627 (result=63731330)
+Branched: 0.408589 (result=63731330)
+No Branch: 0.460169 (result=63731330)
 vs=5, sel=0.750000
-Branched: 0.432815 (result=94983490)
-No Branch: 0.468826 (result=94983490)
+Branched: 0.424498 (result=94983490)
+No Branch: 0.459301 (result=94983490)
 vs=5, sel=0.900000
-Branched: 0.442025 (result=112489845)
-No Branch: 0.469136 (result=112489845)
+Branched: 0.433360 (result=112489845)
+No Branch: 0.459782 (result=112489845)
 vs=5, sel=1.000000
-Branched: 0.451352 (result=125000000)
-No Branch: 0.470519 (result=125000000)
+Branched: 0.439956 (result=125000000)
+No Branch: 0.459443 (result=125000000)
 ----- 1 -----
 vs=1, sel=0.010000
-Branched: 0.089890 (result=250205)
-No Branch: 0.153104 (result=250205)
+Branched: 0.084063 (result=250205)
+No Branch: 0.143415 (result=250205)
 vs=1, sel=0.100000
-Branched: 0.109994 (result=2748034)
-No Branch: 0.153145 (result=2748034)
+Branched: 0.107269 (result=2748034)
+No Branch: 0.143366 (result=2748034)
 vs=1, sel=0.250000
-Branched: 0.170554 (result=6495762)
-No Branch: 0.153120 (result=6495762)
+Branched: 0.165061 (result=6495762)
+No Branch: 0.143358 (result=6495762)
 vs=1, sel=0.500000
-Branched: 0.250715 (result=12746266)
-No Branch: 0.153123 (result=12746266)
+Branched: 0.250406 (result=12746266)
+No Branch: 0.143440 (result=12746266)
 vs=1, sel=0.750000
-Branched: 0.190080 (result=18996698)
-No Branch: 0.153257 (result=18996698)
+Branched: 0.189017 (result=18996698)
+No Branch: 0.143452 (result=18996698)
 vs=1, sel=0.900000
-Branched: 0.155513 (result=22497969)
-No Branch: 0.153131 (result=22497969)
+Branched: 0.153623 (result=22497969)
+No Branch: 0.143525 (result=22497969)
 vs=1, sel=1.000000
-Branched: 0.133048 (result=25000000)
-No Branch: 0.153073 (result=25000000)
+Branched: 0.131028 (result=25000000)
+No Branch: 0.143386 (result=25000000)
 ----- 5 -----
 vs=5, sel=0.010000
-Branched: 0.102688 (result=1251025)
-No Branch: 0.470794 (result=1251025)
+Branched: 0.094265 (result=1251025)
+No Branch: 0.459438 (result=1251025)
 vs=5, sel=0.100000
-Branched: 0.152850 (result=13740170)
-No Branch: 0.469670 (result=13740170)
+Branched: 0.150803 (result=13740170)
+No Branch: 0.459113 (result=13740170)
 vs=5, sel=0.250000
-Branched: 0.255565 (result=32478810)
-No Branch: 0.469741 (result=32478810)
+Branched: 0.253906 (result=32478810)
+No Branch: 0.458507 (result=32478810)
 vs=5, sel=0.500000
-Branched: 0.414175 (result=63731330)
-No Branch: 0.468843 (result=63731330)
+Branched: 0.407769 (result=63731330)
+No Branch: 0.459442 (result=63731330)
 vs=5, sel=0.750000
-Branched: 0.433765 (result=94983490)
-No Branch: 0.469929 (result=94983490)
+Branched: 0.425197 (result=94983490)
+No Branch: 0.459801 (result=94983490)
 vs=5, sel=0.900000
-Branched: 0.442285 (result=112489845)
-No Branch: 0.469269 (result=112489845)
+Branched: 0.431723 (result=112489845)
+No Branch: 0.459907 (result=112489845)
 vs=5, sel=1.000000
-Branched: 0.450606 (result=125000000)
-No Branch: 0.469684 (result=125000000)
+Branched: 0.440608 (result=125000000)
+No Branch: 0.460230 (result=125000000)
