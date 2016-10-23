@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+#include <immintrin.h>
+
 #define PASS 200
 #define FAIL (PASS+1)
 
@@ -63,6 +65,65 @@ long nobranch_scalar_query(struct gen_data *d) {
         sum += (d->A[i] == PASS) * result;
     }
     return sum;
+}
+
+
+long vector_pred_query(struct gen_data *d) {
+  // Loop variables.
+  size_t i, j;
+  // Final sum/result.
+  long sum = 0;
+
+  // The vector used to check the PASS  condition.
+  const __m256i v_pass = _mm256_set1_epi32(PASS);
+ 
+  // The total sum.
+  __m256i v_sum = _mm256_set1_epi32(0);
+  // Used for aggergation.
+  __m128i v_high, v_low;
+
+  // For collecting sum for a single iteration.
+  __m256i v_cur, v_j;
+  // Condition and mask.
+  __m256i v_cond, v_mask;
+
+  for (i = 0; i+8 <= d->n; i += 8) {
+    // Collect the sum for this set.
+    v_cur = _mm256_set1_epi32(0);
+    for (j = 0; j < d->vs; j++) {
+      v_j = _mm256_lddqu_si256((const __m256i *)(d->V[j] + i));
+      v_cur = _mm256_add_epi32(v_cur, v_j);
+    }
+
+    // Load the condition.
+    v_cond = _mm256_lddqu_si256((const __m256i *)(d->A + i));
+    // Check which lanes pass the condition, and zero the rest.
+    v_cond = _mm256_cmpeq_epi32(v_cond, v_pass);
+
+    // Take the AND of the summed elements and the mask to filter values,
+    // and then add it to the sum.
+    v_sum = _mm256_add_epi32(_mm256_and_si256(v_cond, v_cur), v_sum);
+  }
+
+  // Handle the fringe
+  for (; i < d->n; i++) {
+          long result = 0;
+          for (int j = 0; j < d->vs; j++) {
+                  result += d->V[j][i];
+          }
+          sum += (d->A[i] == PASS) * result;
+  }
+
+  // We can use three instructions here to collapse the eight values using a sum,
+  // into two 32-bit values. Then we extract those two values from the vector and
+  // add them into the final result.
+  v_sum = _mm256_hadd_epi32(v_sum, _mm256_set1_epi32(0));
+  v_high = _mm256_extracti128_si256(v_sum, 1);
+  v_low = _mm256_castsi256_si128(v_sum);
+  v_sum = _mm256_castsi128_si256(_mm_add_epi32(v_low, v_high));
+
+  sum += _mm256_extract_epi32(v_sum, 0) + _mm256_extract_epi32(v_sum, 1);
+  return sum;
 }
 
 struct gen_data load_data(size_t vs,
@@ -114,8 +175,11 @@ int main(int argc, char **argv) {
     float sel = 0.01;
 
     int ch;
-    while ((ch = getopt(argc, argv, "v:s:")) != -1) {
+    while ((ch = getopt(argc, argv, "n:v:s:")) != -1) {
         switch (ch) {
+            case 'n':
+                n = atoi(optarg);
+                break;
             case 'v':
                 vs = atoi(optarg);
                 break;
@@ -147,6 +211,13 @@ int main(int argc, char **argv) {
     gettimeofday(&end, 0);
     timersub(&end, &start, &diff);
     printf("No Branch: %ld.%06ld (result=%ld)\n",
+            (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
+    gettimeofday(&start, 0);
+    sum = vector_pred_query(&d);
+    gettimeofday(&end, 0);
+    timersub(&end, &start, &diff);
+    printf("Vector: %ld.%06ld (result=%ld)\n",
             (long) diff.tv_sec, (long) diff.tv_usec, sum);
 
     return 0;
