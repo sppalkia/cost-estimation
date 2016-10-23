@@ -9,11 +9,12 @@ fi
 # The root CBO directory
 RAW=$CBO/raw/q6
 
-rm -rf $RAW
+#rm -rf $RAW
 rm -f $CBO/plots/q6_plot.pdf
 
 mkdir -p $RAW
 
-$CBO/q6_bench/test.sh > $RAW/raw.out
+#$CBO/q6_bench/test.sh > $RAW/raw.out
 $CBO/scripts/parse-q6-logs -i $RAW/raw.out -o $RAW/processed.out
-$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q6_plot -x Selectivity -y "Normalized time" -d $CBO/plots -c 0,1,2,3,4,5
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q6_plot_vs1 -x Selectivity -y "Normalized time" -d $CBO/plots -c 0,1,2
+$CBO/scripts/plot-graph -i $RAW/processed.out -o $CBO/q6_plot_vs5 -x Selectivity -y "Normalized time" -d $CBO/plots -c 3,4,5

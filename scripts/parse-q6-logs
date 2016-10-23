@@ -10,6 +10,7 @@ def main(inputFile, outputFile):
   # times and input parameters
   branchedTimes = dict()
   noBranchedTimes = dict()
+  vectorTimes = dict()
   sels = set()
   allVs = set()
   with open(inputFile, 'r') as f:
@@ -23,16 +24,22 @@ def main(inputFile, outputFile):
         allVs.add(vs)
         if vs not in branchedTimes: branchedTimes[vs] = dict()
         if vs not in noBranchedTimes: noBranchedTimes[vs] = dict()
+        if vs not in vectorTimes: vectorTimes[vs] = dict()
         if sel not in branchedTimes[vs]: branchedTimes[vs][sel] = []
         if sel not in noBranchedTimes[vs]: noBranchedTimes[vs][sel] = []
+        if sel not in vectorTimes[vs]: vectorTimes[vs][sel] = []
       elif "Branched" in line:
         time = float(line.split()[1])
         branchedTimes[vs][sel].append(time)
       elif "No Branch" in line:
         time = float(line.split()[2])
         noBranchedTimes[vs][sel].append(time)
+      elif "Vector" in line:
+        time = float(line.split()[1])
+        vectorTimes[vs][sel].append(time)
 
   # Normalize all the data.
+  """
   maximum = 0.0
   for vs in branchedTimes:
       for sel in branchedTimes[vs]:
@@ -49,6 +56,7 @@ def main(inputFile, outputFile):
   for vs in noBranchedTimes:
       for sel in noBranchedTimes[vs]:
           noBranchedTimes[vs][sel] = [x / float(maximum) for x in noBranchedTimes[vs][sel]]
+  """
 
   # Now, write out parsed data in the format expected by Gnuplot:
   #
@@ -66,12 +74,14 @@ def main(inputFile, outputFile):
     for vs in allVs:
       headerStrs.append("Number of Vs=%d (Branched)" % vs)
       headerStrs.append("Number of Vs=%d (Not branched)" % vs)
+      headerStrs.append("Number of Vs=%d (Vector)" % vs)
     f.write("#\t%s\n" % "\t".join(headerStrs))
     for sel in sels:
       f.write("%.2f" % sel)
       for vs in allVs:
         f.write(" %.2f" % (sum(branchedTimes[vs][sel]) / len(branchedTimes[vs][sel])))
         f.write(" %.2f" % (sum(noBranchedTimes[vs][sel]) / len(noBranchedTimes[vs][sel])))
+        f.write(" %.2f" % (sum(vectorTimes[vs][sel]) / len(vectorTimes[vs][sel])))
       f.write("\n")
 
 

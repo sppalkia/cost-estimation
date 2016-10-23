@@ -50,9 +50,12 @@ for v in [1, 5]:
 
         branched_loop = For(iterations, Id("i"), 1, branch_expr)
         predicated_expr = For(iterations, Id("i"), 1, Multiply(condition, lookups))
+        vector_expr = For(iterations, Id("i"), 8, Multiply(condition, lookups))
 
         # Compute and Print Costs
         c = cost(branched_loop)
         print_result("Branched", c)
         c =  cost(predicated_expr)
         print_result("No Branch", c)
+        c =  cost(vector_expr)
+        print_result("Vector", c)
