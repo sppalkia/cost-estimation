@@ -206,12 +206,18 @@ int main(int argc, char **argv) {
     printf("Branched: %ld.%06ld (result=%ld)\n",
             (long) diff.tv_sec, (long) diff.tv_usec, sum);
 
+    printf(">>> B(result=%ld):%ld.%06ld\t%d\t%d\t%f\n", sum,
+            (long) diff.tv_sec, (long) diff.tv_usec, n, vs, sel);
+
     gettimeofday(&start, 0);
     sum = nobranch_scalar_query(&d);
     gettimeofday(&end, 0);
     timersub(&end, &start, &diff);
     printf("No Branch: %ld.%06ld (result=%ld)\n",
             (long) diff.tv_sec, (long) diff.tv_usec, sum);
+
+    printf(">>> NB(result=%ld):%ld.%06ld\t%d\t%d\t%f\n", sum,
+            (long) diff.tv_sec, (long) diff.tv_usec, n, vs, sel);
 
     gettimeofday(&start, 0);
     sum = vector_pred_query(&d);
