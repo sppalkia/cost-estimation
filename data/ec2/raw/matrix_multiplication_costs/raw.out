@@ -3,64 +3,64 @@ n=128, block_size=128
 1.0
 1.0
 1.0
-Transposed: 4587520.0
+Transposed: 4289448.89225
 1.0
 1.0
 1.0
-Unblocked: 4718592.0
+Unblocked: 4305668.83102
 1.0
 1.0
 1.0
-Blocked: 4718592.0
+Blocked: 4305668.83102
 n=256, block_size=128
 1.0
 1.0
 1.0
-Transposed: 36700160.0
+Transposed: 34315591.138
 1.0
 1.0
 1.0
-Unblocked: 39845888.0
+Unblocked: 35180352.492
 1.0
 1.0
 1.0
-Blocked: 37748736.0
+Blocked: 34445350.6482
 n=512, block_size=128
 1.0
 1.0
 1.0
-Transposed: 301989888.0
+Transposed: 275562805.186
 1.0
 1.0
 1.0
-Unblocked: 327155712.0
+Unblocked: 282480896.018
 1.0
 1.0
 1.0
-Blocked: 301989888.0
+Blocked: 275562805.186
 n=1024, block_size=128
 1.0
 1.0
 1.0
-Transposed: 2550136832.0
+Transposed: 2251542559.49
 1.0
 1.0
 1.0
-Unblocked: 4496293888.0
+Unblocked: 2259847168.14
 1.0
 1.0
 1.0
-Blocked: 2415919104.0
+Blocked: 2204502441.48
 n=2048, block_size=128
 1.0
 1.0
 1.0
-Transposed: 20401094656.0
+Transposed: 18012340475.9
 1.0
 1.0
 1.0
-Unblocked: 35970351104.0
+Unblocked: 18078777345.1
 1.0
 1.0
 1.0
-Blocked: 19327352832.0
+Blocked: 17636019531.9

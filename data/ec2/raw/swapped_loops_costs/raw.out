@@ -1,30 +1,30 @@
 ----- 10 -----
 k=10, n=10000
 1.0
-Original: 456250.0
+Original: 451512.287335
 1.0
-Interchanged: 456250.0
+Interchanged: 451512.287335
 ----- 100 -----
 k=100, n=10000
 1.0
-Original: 4562500.0
+Original: 4515122.87335
 1.0
-Interchanged: 1562500.0
+Interchanged: 2515122.87335
 ----- 500 -----
 k=500, n=10000
 1.0
-Original: 22812500.0
+Original: 22575614.3667
 1.0
-Interchanged: 7812500.0
+Interchanged: 12575614.3667
 ----- 800 -----
 k=800, n=10000
 1.0
-Original: 36500000.0
+Original: 36120982.9868
 1.0
-Interchanged: 12500000.0
+Interchanged: 20120982.9868
 ----- 1000 -----
 k=1000, n=10000
 1.0
-Original: 45625000.0
+Original: 45151228.7335
 1.0
-Interchanged: 15625000.0
+Interchanged: 25151228.7335
