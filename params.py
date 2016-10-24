@@ -64,7 +64,7 @@ ATOMICADD_PENALTY = 10
 BRANCHPRED_PREDICTABLE_IT_DIST = 10
 
 # The max latency of a branch misprediction.
-BRANCHPRED_LATENCY = 2
+BRANCHPRED_LATENCY = 4
 # The latency of executing a branching instruction.
 BRANCH_LATENCY = 1
 
@@ -73,6 +73,4 @@ BRANCH_LATENCY = 1
 # BRANCHPRED_LATENCY.
 def BRANCH_MISPREDICT_PENALTY(selectivity):
     # Returns a parabola whose maxima is at at s=0.5
-    return (-1. * pow(selectivity * 2.0 - 1., 2.) + 1.) * BRANCHPRED_LATENCY
-
-
+    return -2 * BRANCHPRED_LATENCY * abs(selectivity - 0.5) + BRANCHPRED_LATENCY

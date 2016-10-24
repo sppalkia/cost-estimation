@@ -40,7 +40,20 @@ def get_summed_lookups(n, vec=False):
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
-for v in [1, 5]:
+def print_result_parsable(name, value, vs, p, iterations):
+    s = ">>> "
+    s += str(name[0])
+    s += ":"
+    s += str(value)
+    s += "\t"
+    s += str(iterations)
+    s += "\t"
+    s += str(vs)
+    s += "\t"
+    s += str(p)
+    print s
+
+for v in [1, 10]:
     print "----- {0} -----".format(v)
     for s in [0.01, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]:
         print "vs={0}, sel={1}".format(v, s)
@@ -59,7 +72,10 @@ for v in [1, 5]:
         # Compute and Print Costs
         c = cost(branched_loop)
         print_result("Branched", c)
+        print_result_parsable("Branched", c, v, s, iterations)
         c =  cost(predicated_expr)
         print_result("No Branch", c)
+        print_result_parsable("NoBranch", c, v, s, iterations)
         c =  cost(vector_expr)
         print_result("Vector", c)
+        print_result_parsable("Vector", c, v, s, iterations)
