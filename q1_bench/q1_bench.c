@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
             d.buckets[0].count, d.buckets[0].sum_charge);
 
     // For easy parsing
-    printf(">>> Local(result=%d %d):%ld.%06ld\t%d\t%d\t%f\n",
+    printf(">>> L(result=%d %d):%ld.%06ld\t%d\t%d\t%f\n",
             d.buckets[0].count, d.buckets[0].sum_charge,
             (long) diff.tv_sec, (long) diff.tv_usec,
             num_items, num_buckets, prob);
@@ -292,7 +292,7 @@ int main(int argc, char **argv) {
             d.buckets[0].count, d.buckets[0].sum_charge);
 
     // For easy parsing
-    printf(">>> Global(result=%d %d):%ld.%06ld\t%d\t%d\t%f\n",
+    printf(">>> G(result=%d %d):%ld.%06ld\t%d\t%d\t%f\n",
             d.buckets[0].count, d.buckets[0].sum_charge,
             (long) diff.tv_sec, (long) diff.tv_usec,
             num_items, num_buckets, prob);

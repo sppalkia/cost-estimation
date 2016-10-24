@@ -44,6 +44,19 @@ BUCKET_SIZE = 24
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
 
+def print_result_parsable(name, value, b, p, iterations):
+    s = ">>> "
+    s += str(name[0])
+    s += ":"
+    s += str(value)
+    s += "\t"
+    s += str(iterations)
+    s += "\t"
+    s += str(b)
+    s += "\t"
+    s += str(p)
+    print s
+
 def costForQuery(b, p, iterations, globalTable):
     iterations = iterations / CORES
     loopVar = Id("i")
@@ -93,6 +106,7 @@ def costForQuery(b, p, iterations, globalTable):
         print resCost
 
     print_result(label, c + resCost)
+    print_result_parsable(label, c + resCost, b, p, iterations * params.CORES)
 
 for b in [10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000]:
     print "----- {0} -----".format(b)

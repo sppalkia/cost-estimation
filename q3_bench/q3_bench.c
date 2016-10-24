@@ -332,6 +332,12 @@ int main(int argc, char **argv) {
             (long) diff.tv_sec, (long) diff.tv_usec,
             d.buckets[0].revenue);
 
+    // For easy parsing
+    printf(">>> L(result=%d):%ld.%06ld\t%d\t%d\t%f\n",
+            d.buckets[0].revenue,
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            num_items, num_buckets, prob);
+
     // Reset the buckets.
     memset(d.buckets, 0, sizeof(struct q3_entry) * d.num_buckets);
 
@@ -342,6 +348,12 @@ int main(int argc, char **argv) {
     printf("Global: %ld.%06ld (result=%d)\n",
             (long) diff.tv_sec, (long) diff.tv_usec,
             d.buckets[0].revenue);
+
+    // For easy parsing
+    printf(">>> G(result=%d):%ld.%06ld\t%d\t%d\t%f\n",
+            d.buckets[0].revenue,
+            (long) diff.tv_sec, (long) diff.tv_usec,
+            num_items, num_buckets, prob);
 
     return 0;
 }
