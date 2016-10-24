@@ -205,9 +205,10 @@ class GetField(Expr):
         return "{0}.{1}".format(self.struct, self.index)
 
 class BinaryExpr(Expr):
-    def __init__(self, left, right):
+    def __init__(self, left, right, vecSize=1):
         self.left = left
         self.right = right
+        self.vecSize = vecSize
 
     def children(self):
         return [self.left, self.right]
@@ -226,7 +227,13 @@ class BinaryExpr(Expr):
 
         lhsCost = self.left.cost(ctx)
         rhsCost = self.right.cost(ctx)
-        return lhsCost + rhsCost + params.BINOP_LATENCY 
+
+        if self.vecSize > 1:
+            fixedCost = params.BINOP_VEC_LATENCY
+        else:
+            fixedCost = params.BINOP_LATENCY
+        
+        return lhsCost + rhsCost + fixedCost
 
 # Basic Binary expressions, whose cost is computed as being
 # the costs of the LHS and RHS expressions + 1 for the
@@ -350,7 +357,7 @@ class If(Expr):
         branch_penalty = params.BRANCH_MISPREDICT_PENALTY(self.selectivity)
         if it_distance > params.BRANCHPRED_PREDICTABLE_IT_DIST:
             branch_penalty = 0.0
-        return condCost + p_true * trueCost + p_false * falseCost + branch_penalty
+        return params.BRANCH_LATENCY + condCost + p_true * trueCost + p_false * falseCost + branch_penalty
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),

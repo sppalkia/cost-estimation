@@ -51,6 +51,8 @@ MEM_LATENCY = 36
 
 # Latency of a standard binary op (+ - / * >= etc.)
 BINOP_LATENCY = 1
+# Latency of a vectorized binary op (+ - / * >= etc.)
+BINOP_VEC_LATENCY = 4
 
 # Latency of an atomic add with no contention.
 ATOMICADD_LATENCY = 10
@@ -61,8 +63,10 @@ ATOMICADD_PENALTY = 10
 # branch predictor to predict it correctly subsequently.
 BRANCHPRED_PREDICTABLE_IT_DIST = 10
 
+# The max latency of a branch misprediction.
+BRANCHPRED_LATENCY = 2
 # The latency of executing a branching instruction.
-BRANCHPRED_LATENCY = 3
+BRANCH_LATENCY = 1
 
 # The branch misprediction penalty. The penalty is an expected value; when
 # selectivity is closer to 0.5, the penalty is closer to the full

@@ -24,17 +24,18 @@ from cost_with_bandwidth import *
 # Number of lookups
 num_lookups = 4
 # Number of iterations of the for loop
-iterations = 1000
+iterations = 2.5e7
 # Probability of the branch being taken (1-selectivity)
-sel = 0.75
 
-def get_summed_lookups(n):
+def get_summed_lookups(n, vec=False):
     """
     Returns Lookup(V1) + Lookup(V2) + ... Lookup(Vn)
     """
     if n == 0:
         return Literal()
-    return Add(Lookup(str(n), Id("i")), get_summed_lookups(n-1))
+
+    vecSize = 1 if not vec else 8
+    return Add(Lookup(str(n), Id("i")), get_summed_lookups(n-1, vec), vecSize)
 
 def print_result(name, value):
     print "{0}: {1}".format(name, value)
@@ -47,10 +48,13 @@ for v in [1, 5]:
         condition = GreaterThan(Lookup("0", Id("i")), Literal())
         branch_expr = If(condition, lookups, Literal())
         branch_expr.selectivity = s
-
         branched_loop = For(iterations, Id("i"), 1, branch_expr)
         predicated_expr = For(iterations, Id("i"), 1, Multiply(condition, lookups))
-        vector_expr = For(iterations, Id("i"), 8, Multiply(condition, lookups))
+
+
+        vec_lookups = get_summed_lookups(v, 8)
+        vec_condition = GreaterThan(Lookup("0", Id("i")), Literal(), 8)
+        vector_expr = For(iterations, Id("i"), 8, Multiply(vec_condition, vec_lookups))
 
         # Compute and Print Costs
         c = cost(branched_loop)
