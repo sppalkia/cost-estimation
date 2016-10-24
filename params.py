@@ -55,9 +55,9 @@ BINOP_LATENCY = 1
 BINOP_VEC_LATENCY = 4
 
 # Latency of an atomic add with no contention.
-ATOMICADD_LATENCY = 10
+ATOMICADD_LATENCY = 7.0
 # Penalty of contention for an atomic add.
-ATOMICADD_PENALTY = 10
+ATOMICADD_PENALTY = 8.5
 
 # Given a constant condition, The number of branches fall a certain way for the
 # branch predictor to predict it correctly subsequently.

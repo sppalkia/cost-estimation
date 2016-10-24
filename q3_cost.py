@@ -37,7 +37,7 @@ mktsegments = Vector("mktsegments", 2500)
 # An ID referring to the struct at the desired builder index.
 builderId = Id("b")
 
-iterations = 2.5e8
+iterations = 2.5e7
 
 BUCKET_SIZE = 24
 
