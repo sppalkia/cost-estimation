@@ -3,6 +3,10 @@
 
 all: benchmark-plots cost-plots
 
+parameter-estimation:
+	make --directory parameter_estimation/atomic
+	parameter_estimation/atomic/bench
+
 make-benchmarks:
 	make --directory q6_bench
 	make --directory swapped_loops_bench
