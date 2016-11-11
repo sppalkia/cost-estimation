@@ -6,10 +6,10 @@ if [ -z "$CBO" ]; then
 fi  
 
 for it in 1 2 3 4 5; do
-    for k in 10 100 500 800 1000; do
+    for p in 0.00001 0.01 0.5 1.0; do 
+        for k in 10 100 1000 10000 1000000; do
         echo ----- $k -----
-        for n in 10000; do
-            $CBO/swapped_loops_bench/bench -k $k -n $n
+        $CBO/swapped_loops_bench/bench -k $k -p $p -n 10000
         done
     done
 done

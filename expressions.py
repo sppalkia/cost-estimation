@@ -357,7 +357,8 @@ class If(Expr):
         branch_penalty = params.BRANCH_MISPREDICT_PENALTY(self.selectivity)
         if it_distance > params.BRANCHPRED_PREDICTABLE_IT_DIST:
             branch_penalty = 0.0
-        return params.BRANCH_LATENCY + condCost + p_true * trueCost + p_false * falseCost + branch_penalty
+        c = params.BRANCH_LATENCY + condCost + p_true * trueCost + p_false * falseCost + branch_penalty
+        return c
 
     def __str__(self):
         return "if({0},{1},{2})".format(str(self.cond),

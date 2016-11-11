@@ -10,7 +10,7 @@ Instructions (Linux):
 """
 
 # Number of CPU cores.
-CORES = 4
+CORES = 12
 
 # 2.9 GHz
 CLOCK_FREQUENCY = 2E9
@@ -64,7 +64,7 @@ ATOMICADD_PENALTY = 8.5
 BRANCHPRED_PREDICTABLE_IT_DIST = 10
 
 # The max latency of a branch misprediction.
-BRANCHPRED_LATENCY = 4
+BRANCHPRED_LATENCY = 10 
 # The latency of executing a branching instruction.
 BRANCH_LATENCY = 1
 

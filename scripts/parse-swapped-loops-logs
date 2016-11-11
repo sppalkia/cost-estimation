@@ -33,24 +33,6 @@ def main(inputFile, outputFile):
         time = float(line.split()[1])
         interchangedTimes[k][n].append(time)
 
-  # Normalize all the data.
-  maximum = 0.0
-  for k in originalTimes:
-      for n in originalTimes[k]:
-          originalTimes[k][n] = [sum(originalTimes[k][n]) / len(originalTimes[k][n])]
-          maximum = max(maximum, originalTimes[k][n][0])
-  for k in interchangedTimes:
-      for n in interchangedTimes[k]:
-          interchangedTimes[k][n] = [sum(interchangedTimes[k][n]) / len(interchangedTimes[k][n])]
-          maximum = max(maximum, interchangedTimes[k][n][0])
-
-  for k in originalTimes:
-      for n in originalTimes[k]:
-          originalTimes[k][n] = [x / float(maximum) for x in originalTimes[k][n]]
-  for k in interchangedTimes:
-      for n in interchangedTimes[k]:
-          interchangedTimes[k][n] = [x / float(maximum) for x in interchangedTimes[k][n]]
-
   # Now, write out parsed data in the format expected by Gnuplot:
   #
   # #	<Col1 Name>	<Col2 Name> ...

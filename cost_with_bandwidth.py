@@ -73,7 +73,6 @@ def cost(expr):
     m_cost = 0
 
     for l in lookups:
-        print l.p_execute
         num_lookups = (l.loops * l.p_execute)
         l_reuse_distance = reuse_distance(l, lookups, l.loops_seq, block_size)
 
